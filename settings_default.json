@@ -1,0 +1,33 @@
+{
+    "board": {
+        "description": "Settings for the board image.",
+        "settings": {
+            "border_width": {
+                "type": "int",
+                "bounds": [1, null],
+                "description": "The width of the borders between cells, in pixels.",
+                "default": 1,
+                "allow_null": false
+            },
+            "border_color": {
+                "type": "color",
+                "description": "The color of the borders between cells.",
+                "default": "#000000",
+                "allow_null": false
+            },
+            "cell_size": {
+                "type": "int",
+                "bounds": [1, null],
+                "description": "The length and width of the cells.",
+                "default": 5,
+                "allow_null": false
+            },
+            "empty_cell_color": {
+                "type": "color",
+                "description": "The color of empty cells.",
+                "default": "#FFFFFF",
+                "allow_null": false
+            }
+        }
+    }
+}
