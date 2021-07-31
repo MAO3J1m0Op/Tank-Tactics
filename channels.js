@@ -58,5 +58,29 @@ module.exports = {
             g.discordData.boardID = chnl.id
             return chnl
         }
+    },
+    playerRole: {
+        create: async g => {
+            let role = await g.guild.roles.create({ 
+                data: { 
+                    name: "Player - " + g.name,
+                    color: 'GREEN'
+                }
+            })
+            g.discordData.playerRole = role.id
+            return role
+        }
+    },
+    jurorRole: {
+        create: async g => {
+            let role = await g.guild.roles.create({ 
+                data: { 
+                    name: "Juror - " + g.name,
+                    color: 'GOLD'
+                }
+            })
+            g.discordData.playerRole = role.id
+            return role
+        }
     }
 }
