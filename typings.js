@@ -1,3 +1,5 @@
+/** @typedef {import('discord.js').Guild} Guild */
+
 /**
  * @typedef {Object} Setting A setting for the game.
  * @property {string} type The type of object
@@ -39,10 +41,25 @@
  * the Y direction.
  */
 
+/**
+ * @typedef {Object} DiscordData The data involving Discord information.
+ * @property {string} parentID the ID of the parent category.
+ * @property {string} announcementsID the ID of the announcements channel.
+ * @property {string} actionsID the ID of the actions channel.
+ * @property {string} juryID the ID of the jury channel.
+ * @property {string} boardID the ID of the board channel.
+ * @property {string} playerRole the ID of the player role.
+ * @property {string} jurorRole the ID of the juror role.
+ */
+
 /** 
  * @typedef {Object} Game All the assets of a game.
+ * @property {Guild} guild the Guild in which this game runs.
+ * @property {string} name the official name of the game.
+ * @property {string} path the path to the game files.
  * @property {Object} settings the applied settings for this game.
  * @property {Player[]} playerdata the player data for the game.
  * @property {string[]} jury the Discord API IDs of the players that are 
  * jurors.
+ * @property {DiscordData} discordData the Discord data.
  */

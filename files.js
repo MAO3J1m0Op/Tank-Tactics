@@ -4,19 +4,43 @@
 
 const fs = require('fs').promises
 
+const channels = require('./channels')
 const settings = require('./settings_default.json')
 
 /**
- * Creates the file structure for a new game.
- * @param {string} path the path to which the game data will be written.
- * @param {Game} game the complete data of the game.
+ * Sets up a new game.
+ * @param {discord.Guild} path the path to which the game data will be written.
+ * @param {string} name the name of the game.
  */
-module.exports.newGame = async function(path, game) {
-    await fs.mkdir(path, { recursive: true })
-    return Promise.all([
-        module.exports.writeSettings(path, game, { assumeDirMade: true}),
-        module.exports.writePlayerData(path, game, { assumeDirMade: true})
+module.exports.newGame = async function(guild, name) {
+
+    /** @type {Game} */
+    const game = {
+        path: './data/' + guild.id + '/' + name,
+        guild: guild,
+        name: name,
+        settings: {},
+        playerdata: {},
+        discordData: {}
+    }
+
+    // File structure
+    await fs.mkdir(game.path, { recursive: true })
+    Promise.all([
+        module.exports.writeSettings(game, { assumeDirMade: true}),
+        module.exports.writePlayerData(game, { assumeDirMade: true}),
+        module.exports.writeDiscordData(game, { assumeDirMade: true})
     ])
+
+    // Create Discord channels
+    game.discordData.parentID = (await channels.parent.create(game)).id
+    await Promise.all([
+        channels.announcements.create(game),
+        channels.actions.create(game),
+        channels.jury.create(game),
+        channels.board.create(game),
+    ])
+    return game
 }
 
 /**
@@ -28,28 +52,36 @@ module.exports.newGame = async function(path, game) {
 
 /**
  * Writes the settings to file.
- * @param {string} path the root path of the game.
- * @param {Game} game a game object containing complete settings data.
+ * @param {typings.Game} game a game object containing complete settings data.
  * @param {WriteOptions} options
  */
-module.exports.writeSettings = async function(path, game, options) {
-    if (!game) return // Null check
-    if (!options.assumeDirMade) await fs.mkdir(path, { recursive: true })
-    return fs.writeFile(path + "/settings.json", JSON.stringify(game.settings, null, 4))
+module.exports.writeSettings = async function(game, options) {
+    if (!options.assumeDirMade) await fs.mkdir(game.path, { recursive: true })
+    return fs.writeFile(game.path + "/settings.json", JSON.stringify(
+        game.settings, null, 4))
 }
 
 /**
  * Writes the settings to file.
- * @param {string} path the root path of the game.
- * @param {Game} game a game object containing complete settings data.
+ * @param {Game} game a game object containing complete player data.
  * @param {WriteOptions} options
  */
-module.exports.writePlayerData = async function(path, game, options) {
-    if (!game) return // Null check
-    if (!options.assumeDirMade) await fs.mkdir(path, { recursive: true })
+module.exports.writePlayerData = async function(game, options) {
+    if (!options.assumeDirMade) await fs.mkdir(game.path, { recursive: true })
     let obj = {
         alive: game.playerdata,
         jury: game.jury
     }
-    return fs.writeFile(path + "/playerdata.json", JSON.stringify(obj, null, 4))
+    return fs.writeFile(game.path + "/playerdata.json", JSON.stringify(obj, null, 4))
+}
+
+/**
+ * Writes the Discord data to file.
+ * @param {Game} game a game object containing complete Discord data.
+ * @param {WriteOptions} options
+ */
+module.exports.writeDiscordData = async function(game, options) {
+    if (!options.assumeDirMade) await fs.mkdir(game.path, { recursive: true })
+    return fs.writeFile(game.path + "/discord.json", JSON.stringify(
+        game.discordData, null, 4))
 }
