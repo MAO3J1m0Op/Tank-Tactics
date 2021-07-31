@@ -48,6 +48,34 @@ module.exports.newGame = async function(guild, name) {
 }
 
 /**
+ * Loads in a new game from memory.
+ * @param {discord.Guild} guild the guild for this game.
+ * @param {string} name the name of the game to load.
+ */
+ module.exports.loadGame = async function(guild, name) {
+    
+    /** @type {Game} */
+    const game = {
+        path: './data/' + guild.id + '/' + name,
+        guild: guild,
+        name: name
+    }
+
+    const settings = fs.readFile(path + '/settings.json').then(JSON.parse)
+        .then(json => game.settings = json)
+    const playerdata = fs.readFile(path + '/playerdata.json').then(JSON.parse)
+        .then(obj => {
+            game.playerdata = obj.alive
+            game.jury = obj.jury
+        })
+    const discord = fs.readFile(path + '/discord.json').then(JSON.parse)
+        .then(json => game.discordData = json)
+
+    await Promise.all([settings, playerdata, discord])
+    return game
+}
+
+/**
  * @typedef {Object} WriteOptions the options for a call to a Game write
  * function.
  * @property {boolean} [assumeDirMade] if true, the function will assume the
