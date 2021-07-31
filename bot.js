@@ -1,6 +1,6 @@
 const discord = require('discord.js')
 
-const files = require('./files')
+const games = require('./games')
 const auth = require('./auth.json')
 
 const bot = new discord.Client()
