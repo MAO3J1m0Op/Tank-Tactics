@@ -1,4 +1,3 @@
-const games = require('./games')
 const bot = require('./bot')
 const actions = require('./actions')
 

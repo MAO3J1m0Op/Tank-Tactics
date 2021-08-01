@@ -17,11 +17,10 @@ bot.on('message', msg => {
         // Compare the IDs of the channels for each game
         for (const chnl in channels) {
 
-            console.log(chnl)
-
             if (guildGames[name].discordData[chnl + 'ID'] === msg.channel.id) {
 
                 // Call the callback
+                console.log(`Called callback for ${chnl} in game ${name}.`)
                 return channels[chnl].commandCallback(msg, guildGames[name])
             }
         }
@@ -35,7 +34,9 @@ bot.on('message', msg => {
 module.exports.ready = new Promise((resolve, reject) => {
     bot.on('ready', () => { resolve() })
 })
-module.exports.ready.then(() => console.log(`Logged in as ${bot.user.tag}.`))
+module.exports.ready
+    .then(() => console.log(`Logged in as ${bot.user.tag}.`))
+    .then(() => games.loadAllActive())
 
 /**
  * Fetches the object for one of the game channels.

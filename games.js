@@ -8,6 +8,38 @@ const bot = require('./bot')
 const channels = require('./channels')
 const settings = require('./settings_default.json')
 
+/** @type {{ [guildLookup: string]: { [nameLookup: string]: Game }}} */
+const loadedGames = {}
+
+/**
+ * Loads all games into memory.
+ */
+module.exports.loadAllActive = async function() {
+    const guilds = await fs.readdir('./data/active')
+
+    // Get all the promises to loading in
+    const promises = guilds.map(async guildID => {
+
+        // Read each directory
+        return fs.readdir('./data/active/' + guildID)
+            .then(names => names.map(name => {
+
+                // Load in each game
+                const guild = bot.fetchGuild(guildID)
+                return module.exports.loadGame(guild, name)
+                    .then(() => console.log(`Loaded game ${name} from guild `
+                        + `${guild.name} (ID ${guild.id}).`))
+                    .catch(err => {
+                        console.log(`Error loading game ${name} from guild `
+                            + `${guild.name} (ID ${guild.id}).`)
+                        console.error(err)
+                    })
+            }))
+    })
+
+    return Promise.all(promises)
+        .then(() => console.log('All games loaded.'))
+}
 
 /**
  * 
@@ -49,11 +81,15 @@ module.exports.newGame = async function(guild, name) {
 
     /** @type {Game} */
     const game = {
-        path: './data/' + guild.id + '/' + name,
+        path: './data/active/' + guild.id + '/' + name,
         guild: guild,
         name: name,
         settings: {},
-        playerdata: {},
+        playerdata: {
+            alive: {},
+            jury: [],
+            started: false
+        },
         discordData: {}
     }
 
@@ -83,6 +119,8 @@ module.exports.newGame = async function(guild, name) {
         module.exports.writePlayerData(game, { assumeDirMade: true}),
         module.exports.writeDiscordData(game, { assumeDirMade: true})
     ])
+
+    addGame(guild, name, game)
     return game
 }
 
@@ -95,19 +133,20 @@ module.exports.newGame = async function(guild, name) {
     
     /** @type {Game} */
     const game = {
-        path: './data/' + guild.id + '/' + name,
+        path: './data/active/' + guild.id + '/' + name,
         guild: guild,
         name: name
     }
 
-    const settings = fs.readFile(path + '/settings.json').then(JSON.parse)
+    const settings = fs.readFile(game.path + '/settings.json').then(JSON.parse)
         .then(json => game.settings = json)
-    const playerdata = fs.readFile(path + '/playerdata.json').then(JSON.parse)
-        .then(json => game.settings = json)
-    const discord = fs.readFile(path + '/discord.json').then(JSON.parse)
+    const playerdata = fs.readFile(game.path + '/playerdata.json').then(JSON.parse)
+        .then(json => game.playerdata = json)
+    const discord = fs.readFile(game.path + '/discord.json').then(JSON.parse)
         .then(json => game.discordData = json)
 
     await Promise.all([settings, playerdata, discord])
+    addGame(guild, name, game)
     return game
 }
 

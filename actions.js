@@ -1,12 +1,19 @@
 const bot = require('./bot')
+const games = require('./games')
 
+/**
+ * 
+ * @param {discord.Message} msg 
+ * @param {Game} game 
+ * @param {string} color the player color
+ */
 module.exports.join = async function(msg, game, color) {
     if (game.playerdata.started)
         return msg.reply("Sorry, but the game has already started.")
     
     // Adds user to role
     const role = game.guild.roles.cache.get(game.discordData.playerRole)
-    await msg.author.roles.add(role)
+    await msg.guild.members.cache.get(msg.author.id).roles.add(role)
 
     // Sets up their player data entry
     game.playerdata.alive[msg.author.id] = null
