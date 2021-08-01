@@ -64,10 +64,7 @@ module.exports.newGame = async function(guild, name) {
     const settings = fs.readFile(path + '/settings.json').then(JSON.parse)
         .then(json => game.settings = json)
     const playerdata = fs.readFile(path + '/playerdata.json').then(JSON.parse)
-        .then(obj => {
-            game.playerdata = obj.alive
-            game.jury = obj.jury
-        })
+        .then(json => game.settings = json)
     const discord = fs.readFile(path + '/discord.json').then(JSON.parse)
         .then(json => game.discordData = json)
 
@@ -100,11 +97,8 @@ module.exports.writeSettings = async function(game, options) {
  */
 module.exports.writePlayerData = async function(game, options) {
     if (!options.assumeDirMade) await fs.mkdir(game.path, { recursive: true })
-    let obj = {
-        alive: game.playerdata,
-        jury: game.jury
-    }
-    return fs.writeFile(game.path + "/playerdata.json", JSON.stringify(obj, null, 4))
+    return fs.writeFile(game.path + "/playerdata.json", JSON.stringify(
+        game.playerdata, null, 4))
 }
 
 /**

@@ -58,8 +58,10 @@
  * @property {string} name the official name of the game.
  * @property {string} path the path to the game files.
  * @property {Object} settings the applied settings for this game.
- * @property {Player[]} playerdata the player data for the game.
- * @property {string[]} jury the Discord API IDs of the players that are 
- * jurors.
+ * @property {{ 
+ *     alive: {[userID: string]: Player }, 
+ *     jury: string[],
+ *     started: boolean
+ * }} playerdata the player data for the game.
  * @property {DiscordData} discordData the Discord data.
  */
