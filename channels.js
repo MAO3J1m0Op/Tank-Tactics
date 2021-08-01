@@ -25,23 +25,23 @@ module.exports = {
     parent: {
         create: async g => {
             let chnl = await g.guild.channels.create(g.name, {type: "category"})
-            g.discordData.parentID = chnl.id
+            g.discord.parentID = chnl.id
             return chnl
         }
     },
     announcements: {
         create: async g => {
             let chnl = await g.guild.channels.create("announcements", {type: "text"})
-            chnl.setParent(g.guild.channels.cache.get(g.discordData.parentID))
-            g.discordData.announcementsID = chnl.id
+            chnl.setParent(g.guild.channels.cache.get(g.discord.parentID))
+            g.discord.announcementsID = chnl.id
             return chnl
         }
     },
     actions: {
         create: async g => {
             let chnl = await g.guild.channels.create("actions", {type: "text"})
-            chnl.setParent(g.guild.channels.cache.get(g.discordData.parentID))
-            g.discordData.actionsID = chnl.id
+            chnl.setParent(g.guild.channels.cache.get(g.discord.parentID))
+            g.discord.actionsID = chnl.id
             return chnl
         },
         commandCallback: async (msg, game) => {
@@ -95,16 +95,16 @@ module.exports = {
     jury: {
         create: async g => {
             let chnl = await g.guild.channels.create("jury", {type: "text"})
-            chnl.setParent(g.guild.channels.cache.get(g.discordData.parentID))
-            g.discordData.juryID = chnl.id
+            chnl.setParent(g.guild.channels.cache.get(g.discord.parentID))
+            g.discord.juryID = chnl.id
             return chnl
         }
     },
     board: {
         create: async g => {
             let chnl = await g.guild.channels.create("board", {type: "text"})
-            chnl.setParent(g.guild.channels.cache.get(g.discordData.parentID))
-            g.discordData.boardID = chnl.id
+            chnl.setParent(g.guild.channels.cache.get(g.discord.parentID))
+            g.discord.boardID = chnl.id
             return chnl
         }
     },
@@ -116,7 +116,7 @@ module.exports = {
                     color: 'GREEN'
                 }
             })
-            g.discordData.playerRole = role.id
+            g.discord.playerRole = role.id
             return role
         }
     },
@@ -128,7 +128,7 @@ module.exports = {
                     color: 'GOLD'
                 }
             })
-            g.discordData.playerRole = role.id
+            g.discord.playerRole = role.id
             return role
         }
     }

@@ -63,5 +63,5 @@
  *     jury: string[],
  *     started: boolean
  * }} playerdata the player data for the game.
- * @property {DiscordData} discordData the Discord data.
+ * @property {DiscordData} discord the Discord data.
  */

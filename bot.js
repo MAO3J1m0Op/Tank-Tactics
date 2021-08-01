@@ -17,7 +17,7 @@ bot.on('message', msg => {
         // Compare the IDs of the channels for each game
         for (const chnl in channels) {
 
-            if (guildGames[name].discordData[chnl + 'ID'] === msg.channel.id) {
+            if (guildGames[name].discord[chnl + 'ID'] === msg.channel.id) {
 
                 // Call the callback
                 console.log(`Called callback for ${chnl} in game ${name}.`)
@@ -44,7 +44,7 @@ module.exports.ready
  * @param {string} channelName the name of the channel to fetch.
  */
 module.exports.fetchChannel = function(game, channelName) {
-    return bot.channels.cache.get(game.discordData[channelName + 'ID'])
+    return bot.channels.cache.get(game.discord[channelName + 'ID'])
 }
 
 /**
@@ -80,11 +80,11 @@ module.exports.parseMention = function(mention) {
 // TODO: slash commands?
 bot.on('message', msg => {
     // Natural language processing :P
-    if (msg.content === "Let's play with some tanks!!") {
+    if (msg.content === "tanky tanky") {
         
         // Start the game.
         console.log(`Starting game in guild ${msg.guild.name} (ID ${msg.guild.id}).`)
 
-        loadedGames = games.newGame(msg.guild, 'Tank Tactics Test')
+        loadedGames = games.newGame(msg.guild, 'Loaded Tank Tactics Test')
     }
 })
