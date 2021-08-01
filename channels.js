@@ -20,6 +20,20 @@ const actions = require('./actions')
  * a message is received on the channel.
  */
 
+/**
+ * Generates a create function for a channel with the specified name.
+ * @param {string} name the name of the channel to create.
+ * @returns {(game: Game) => Promise<discord.TextChannel>} the create function.
+ */
+function createFactory(name) {
+    return async g => {
+        let chnl = await g.guild.channels.create(name, {type: "text"})
+        chnl.setParent(g.guild.channels.cache.get(g.discord.parentID))
+        g.discord[name + 'ID'] = chnl.id
+        return chnl
+    }
+}
+
 /** @type {{ [name: string]: Channel }} */
 module.exports = {
     parent: {
@@ -30,20 +44,10 @@ module.exports = {
         }
     },
     announcements: {
-        create: async g => {
-            let chnl = await g.guild.channels.create("announcements", {type: "text"})
-            chnl.setParent(g.guild.channels.cache.get(g.discord.parentID))
-            g.discord.announcementsID = chnl.id
-            return chnl
-        }
+        create: createFactory('announcements')
     },
     actions: {
-        create: async g => {
-            let chnl = await g.guild.channels.create("actions", {type: "text"})
-            chnl.setParent(g.guild.channels.cache.get(g.discord.parentID))
-            g.discord.actionsID = chnl.id
-            return chnl
-        },
+        create: createFactory('actions'),
         commandCallback: async (msg, game) => {
 
             if (msg.content === 'join') {
@@ -93,20 +97,10 @@ module.exports = {
         }
     },
     jury: {
-        create: async g => {
-            let chnl = await g.guild.channels.create("jury", {type: "text"})
-            chnl.setParent(g.guild.channels.cache.get(g.discord.parentID))
-            g.discord.juryID = chnl.id
-            return chnl
-        }
+        create: createFactory('jury')
     },
     board: {
-        create: async g => {
-            let chnl = await g.guild.channels.create("board", {type: "text"})
-            chnl.setParent(g.guild.channels.cache.get(g.discord.parentID))
-            g.discord.boardID = chnl.id
-            return chnl
-        }
+        create: createFactory('board')
     },
     playerRole: {
         create: async g => {
