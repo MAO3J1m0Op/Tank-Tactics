@@ -4,8 +4,41 @@
 
 const fs = require('fs').promises
 
+const bot = require('./bot')
 const channels = require('./channels')
 const settings = require('./settings_default.json')
+
+
+/**
+ * 
+ * @param {discord.Guild} guild the game's guild.
+ * @param {string} name the name of the game.
+ * @returns {Game} the game within the specified guild and with the specified name.
+ */
+module.exports.getGame = function(guild, name) {
+    return module.exports.getGames(guild)[name]
+}
+
+/**
+ * Gets all the games within the guild.
+ * @param {discord.Guild} guild the game's guild. 
+ * @returns {{ [nameLookup: string]: Game }}
+ */
+module.exports.getGames = function(guild) {
+    const check = loadedGames[guild.id]
+    return check ? check : {}
+}
+
+/**
+ * Adds a game to the list of loaded games.
+ * @param {discord.Guild} guild the game's guild.
+ * @param {string} name the name of the game.
+ * @param {Game} game the game to add.
+ */
+function addGame(guild, name, game) {
+    if (!loadedGames[guild.id]) loadedGames[guild.id] = []
+    loadedGames[guild.id][name] = game
+} 
 
 /**
  * Sets up a new game.

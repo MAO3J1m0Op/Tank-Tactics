@@ -1,3 +1,7 @@
+const games = require('./games')
+const bot = require('./bot')
+const actions = require('./actions')
+
 /**
  * @callback ChannelCreator
  * @param {Game} game the game to which this channel belongs.
@@ -6,7 +10,6 @@
 
 /**
  * @callback ChannelCommand
- * @param {discord.Client} bot the bot that read the message.
  * @param {discord.Message} msg the message.
  * @param {Game} game the game to which the command pertains.
 */
@@ -41,6 +44,53 @@ module.exports = {
             chnl.setParent(g.guild.channels.cache.get(g.discordData.parentID))
             g.discordData.actionsID = chnl.id
             return chnl
+        },
+        commandCallback: async (msg, game) => {
+
+            if (msg.content === 'join') {
+                return actions.join(msg, game, null)
+            } 
+            
+            else if (msg.content === 'quit') {
+                return msg.reply('Sorry to see you go! Your tank has been '
+                    + 'destroyed; you are now a member of the jury.')
+            }
+            
+            else if (msg.content.startsWith('fire')) {
+                const cmd = msg.content.split(' ')
+                let intent
+                if (msg.content[1] === 'at') {
+                    // fire at a person
+                    intent = true
+                } else if (msg.content[1] === 'to') {
+                    // fire action point to a person
+                    intent = false
+                } else {
+                    return msg.reply('For the fire command, use "fire at '
+                        + '<player>" to attack a player, and "fire to '
+                        + '<player" to give an action point to a player.')
+                }
+
+                const target = bot.parseMention(msg.content[2])
+                if (!target) {
+                    return msg.reply('Your target must be a mentioned player.')
+                }
+
+                return actions.fire(msg, game, intent, target)
+
+            } else if (msg.content.startsWith('move')) {
+                const dir = msg.content.split(' ')[1]
+                switch (dir) {
+                    case 'up':
+                    case 'down':
+                    case 'left':
+                    case 'right':
+                        return actions.move(msg, game, dir)
+                    default:
+                        return msg.reply("You can't do that! Please specify "
+                            + 'a valid direction (up/down/left/right).')
+                }
+            }
         }
     },
     jury: {
