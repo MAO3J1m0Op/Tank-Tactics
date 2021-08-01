@@ -24,25 +24,31 @@ module.exports.newGame = async function(guild, name) {
         discordData: {}
     }
 
+    // Create Discord channels
+    game.discordData.parentID = (await channels.parent.create(game)).id
+    const roles = await Promise.all([
+        channels.playerRole.create(game),
+        channels.jurorRole.create(game)
+    ])
+    game.discordData.playerRole = roles[0].id
+    game.discordData.jurorRole = roles[1].id
+    const chnls = await Promise.all([
+        channels.announcements.create(game),
+        channels.actions.create(game),
+        channels.jury.create(game),
+        channels.board.create(game),
+    ])
+    game.discordData.announcementsID = chnls[0].id
+    game.discordData.actionsID = chnls[1].id
+    game.discordData.juryID = chnls[2].id
+    game.discordData.boardID = chnls[3].id
+
     // File structure
     await fs.mkdir(game.path, { recursive: true })
     Promise.all([
         module.exports.writeSettings(game, { assumeDirMade: true}),
         module.exports.writePlayerData(game, { assumeDirMade: true}),
         module.exports.writeDiscordData(game, { assumeDirMade: true})
-    ])
-
-    // Create Discord channels
-    game.discordData.parentID = (await channels.parent.create(game)).id
-    await Promise.all([
-        channels.playerRole.create(game),
-        channels.jurorRole.create(game)
-    ])
-    await Promise.all([
-        channels.announcements.create(game),
-        channels.actions.create(game),
-        channels.jury.create(game),
-        channels.board.create(game),
     ])
     return game
 }
