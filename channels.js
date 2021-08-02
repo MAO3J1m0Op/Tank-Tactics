@@ -51,7 +51,11 @@ module.exports = {
         commandCallback: async (msg, game) => {
 
             if (msg.content === 'join') {
-                return actions.join(msg, game, null)
+                const cmd = msg.content.split(' ')
+
+                // Is there a color?
+                return actions.join(msg, game, 
+                    cmd[1] === 'as' && cmd[2] ? cmd[2] : null)
             } 
             
             else if (msg.content === 'quit') {

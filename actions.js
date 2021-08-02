@@ -1,5 +1,6 @@
 const bot = require('./bot')
 const games = require('./games')
+const colors = require('./colors')
 
 /**
  * 
@@ -10,13 +11,37 @@ const games = require('./games')
 module.exports.join = async function(msg, game, color) {
     if (game.playerdata.started)
         return msg.reply("Sorry, but the game has already started.")
+
+    // Choose the color
+    if (color) {
+
+        // Ensures the selected color is valid
+        if (!colors.allColors.includes(color)) {
+            return msg.reply("The color you've picked is not on file."
+                + " Try another.")
+        }
+
+        // Ensures the selected color is unused
+        if (!colors.unusedColors(game).includes(color)) {
+            return msg.reply("The color you've chosen is already used.")
+        }
+    } else {
+
+        // Random unused color
+        color = colors.randomUnused(game)
+
+        // No colors?
+        if (!color) {
+            return msg.reply("There's no more colors to give ya!")
+        }
+    }
     
     // Adds user to role
     const role = game.guild.roles.cache.get(game.discord.playerRole)
     await msg.guild.members.cache.get(msg.author.id).roles.add(role)
 
     // Sets up their player data entry
-    game.playerdata.alive[msg.author.id] = null
+    game.playerdata.alive[msg.author.id] = { color: color }
     await games.write('playerdata', game)
 
     // Reply
