@@ -56,7 +56,11 @@ module.exports = {
                 // Is there a color?
                 return actions.join(msg, game, 
                     cmd[1] === 'as' && cmd[2] ? cmd[2] : null)
-            } 
+            }
+
+            else if (msg.content === 'start') {
+                return actions.start(msg, game)
+            }
             
             else if (msg.content === 'quit') {
                 return msg.reply('Sorry to see you go! Your tank has been '

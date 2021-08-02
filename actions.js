@@ -46,7 +46,13 @@ module.exports.join = async function(msg, game, color) {
     await msg.guild.members.cache.get(msg.author.id).roles.add(role)
 
     // Sets up their player data entry
-    game.playerdata.alive[msg.author.id] = { color: color }
+    game.playerdata.alive[msg.author.id] = { 
+        color: color,
+        actions: 0,
+        health: 3,
+        id: msg.author.id,
+        position: null
+    }
     await games.write('playerdata', game)
 
     // Reply
@@ -55,6 +61,77 @@ module.exports.join = async function(msg, game, color) {
         bot.fetchChannel(game, 'announcements')
             .send(`Welcome ${msg.author} to the game!`)
     ])
+}
+
+/**
+ * Starts a game!
+ * @param {discord.Message} msg 
+ * @param {Game} game 
+ */
+module.exports.start = async function(msg, game) {
+
+    // Get the dimensions of the board
+
+    // Each player will have a NxN area to themselves where they will spawn
+    // Below figures out how many of these areas we will need
+
+    // Player count
+    const playerCount = Object.keys(game.playerdata.alive).length
+
+    // Find largest factor of playerCount
+    const sqrt = Math.floor(Math.sqrt(playerCount))
+    let factor
+    for (let fTest = sqrt; fTest >= 1; --fTest) {
+        if (playerCount % fTest == 0) {
+            factor = fTest
+            break
+        }
+    }
+
+    // Now we have our dimensions
+    const unscaledDims = {
+        x: Math.ceil(playerCount / factor),
+        y: factor
+    }
+
+    // Scale by N, where N is the size of a tank's "personal space"
+    const N = 5
+    const dims = {
+        x: unscaledDims.x * N,
+        y: unscaledDims.y * N
+    }
+
+    // Input board dimensions into the game
+    game.playerdata.boardMin = [0, 0]
+    game.playerdata.boardSize = [dims.x, dims.y]
+
+    // Determine start positions for each player
+    let i = 0
+    for (const name in game.playerdata.alive) {
+        if (Object.hasOwnProperty.call(game.playerdata.alive, name)) {
+            const player = game.playerdata.alive[name];
+            
+            // Get personal space position
+            const yBaseUnscaled = Math.floor(i / unscaledDims.x)
+            const xBase = (i - yBaseUnscaled * unscaledDims.x) * N
+            const yBase = yBaseUnscaled * N
+
+            // Generate 2 random numbers: x and y
+            const xOffset = Math.floor(Math.random() * N)
+            const yOffset = Math.floor(Math.random() * N)
+
+            player.position = [xBase + xOffset, yBase + yOffset]
+        }
+        ++i
+    }
+
+    // Write positions
+    await games.write('playerdata', game)
+
+    // Declares the game started
+    game.playerdata.started = true
+    bot.fetchChannel(game, 'announcements')
+        .send("The game has started!")
 }
 
 /**

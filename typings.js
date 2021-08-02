@@ -54,6 +54,9 @@
 
 /**
  * @typedef {Object} PlayerData The player data for the game.
+ * @property {Position} boardMin the coordinates of the top-left corner of
+ * the board (in case the board is resized).
+ * @property {Position} boardSize the size of the board.
  * @property {{[userID: string]: Player }} alive the tanks on the board.
  * @property {string[]} jury the IDs of the jurors.
  * @property {boolean} started whether the game has started.
