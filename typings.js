@@ -52,16 +52,19 @@
  * @property {string} jurorRole the ID of the juror role.
  */
 
+/**
+ * @typedef {Object} PlayerData The player data for the game.
+ * @property {{[userID: string]: Player }} alive the tanks on the board.
+ * @property {string[]} jury the IDs of the jurors.
+ * @property {boolean} started whether the game has started.
+ */
+
 /** 
  * @typedef {Object} Game All the assets of a game.
  * @property {Guild} guild the Guild in which this game runs.
  * @property {string} name the official name of the game.
  * @property {string} path the path to the game files.
  * @property {Object} settings the applied settings for this game.
- * @property {{ 
- *     alive: {[userID: string]: Player }, 
- *     jury: string[],
- *     started: boolean
- * }} playerdata the player data for the game.
+ * @property {PlayerData} playerdata the player data for the game.
  * @property {DiscordData} discord the Discord data.
  */
