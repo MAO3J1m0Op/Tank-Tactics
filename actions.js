@@ -12,6 +12,11 @@ module.exports.join = async function(msg, game, color) {
     if (game.playerdata.started)
         return msg.reply("Sorry, but the game has already started.")
 
+    // Players that have already joined cannot join again
+    if (game.playerdata.alive[msg.author.id])
+        return msg.reply("You've been welcomed...I guess you wanna hear "
+            + "it twice?")
+
     // Choose the color
     if (color) {
 
