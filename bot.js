@@ -23,6 +23,7 @@ bot.on('message', msg => {
             if (guildGames[name].discord[chnl + 'ID'] === msg.channel.id) {
 
                 // Call the callback
+                if (!channels[chnl].commandCallback) return
                 console.log(`Called callback for ${chnl} in game ${name}.`)
                 return channels[chnl].commandCallback(msg, guildGames[name])
             }
