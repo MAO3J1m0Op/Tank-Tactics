@@ -10,6 +10,9 @@ bot.login(auth.token)
 // Command callbacks for messages
 bot.on('message', msg => {
 
+    // Ignore own messages
+    if (msg.author === bot.user) return
+
     const guildGames = games.getGames(msg.guild)
     
     for (const name in guildGames) {
@@ -87,4 +90,8 @@ bot.on('message', msg => {
 
         loadedGames = games.newGame(msg.guild, 'Loaded Tank Tactics Test')
     }
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('Unhandled Promise Rejection in: Promise', promise + '\nreason:', reason)
 })
