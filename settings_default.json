@@ -29,5 +29,26 @@
                 "allow_null": false
             }
         }
+    },
+    "personal_space_size": {
+        "type": "int",
+        "bounds": [2, null],
+        "description": "The length and height of the square area designated for each player's initial position.",
+        "default": 5,
+        "allow_null": false
+    },
+    "player_minimum": {
+        "type": "int",
+        "bounds": [1, null],
+        "description": "The game will not start unless the player minimum has been reached.",
+        "default": 4,
+        "allow_null": false
+    },
+    "player_maximum": {
+        "type": "int",
+        "bounds": [1, null],
+        "description": "The game will automatically start when this threshold is reached. Set this setting to null if no player maximum is desired.",
+        "default": null,
+        "allow_null": true
     }
 }
