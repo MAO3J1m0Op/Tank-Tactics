@@ -102,6 +102,25 @@ module.exports = {
                             + 'a valid direction (up/down/left/right).')
                 }
             }
+
+            else if (msg.content.startsWith('setting')) {
+                /** @type {string[]} */
+                const cmd = msg.content.split(' ')
+                const dirStr = cmd[1]
+                let dir
+                switch (dirStr) {
+                    case 'get': dir = false; break
+                    case 'set': dir = true; break
+                    default:
+                        return msg.reply('You must "get" or "set" a setting.')
+                }
+                const setting = cmd[2] ? cmd[2].split('.') : []
+                const value = dir ? cmd[3] : undefined
+                if (dir && !value)
+                    return msg.reply("Please specify a value for updating the "
+                        + "setting.")
+                return actions.setting(msg, game, dir, setting, value)
+            }
         }
     },
     jury: {

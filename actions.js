@@ -1,6 +1,7 @@
 const bot = require('./bot')
 const games = require('./games')
 const colors = require('./colors')
+const settings = require('./settings')
 
 /**
  * 
@@ -155,4 +156,43 @@ module.exports.fire = async function(msg, game, intent, target) {
  */
 module.exports.move = async function(msg, game, direction) {
 
+}
+
+/**
+ * Updates or gets the value of a setting.
+ * @param {discord.Message} msg 
+ * @param {Game} game 
+ * @param {boolean} getOrSet true if setting, false if getting.
+ * @param {string[]} settingName the setting to get.
+ * @param {string} [value] the new value of the setting (if setting).
+ */
+module.exports.setting = async function(msg, game, getOrSet, settingName, value)
+{
+    // Get
+    if (!getOrSet) {
+        let content
+        try {
+            content = settings.infoMessage(settingName, game)
+        } catch (err) {
+            if (!(err instanceof settings.SettingNotFoundError)) throw err
+            return msg.reply(err.message)
+        }
+        return msg.reply(content)
+    }
+
+    // Set
+    let parsed
+    try {
+        parsed = settings.parse(value, settingName)
+    } catch (err) {
+        if (!(err instanceof settings.SettingError)) throw err
+        if (err instanceof settings.SettingNotFoundError)
+            return msg.reply(err.message)
+        return msg.reply("That value doesn't work for that setting.\n```"
+            + err.message + '```')
+    }
+    settings.set(game, settingName, value)
+    await games.write('settings', game)
+    return msg.reply('Successfully updated the value of '
+        + settings.properName(settingName))
 }
