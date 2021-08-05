@@ -94,5 +94,5 @@ bot.on('message', msg => {
 })
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.log('Unhandled Promise Rejection in: Promise', promise + '\nreason:', reason)
+    console.log('Unhandled Promise Rejection:', reason)
 })
