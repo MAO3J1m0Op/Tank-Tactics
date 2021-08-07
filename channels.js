@@ -51,6 +51,7 @@ module.exports = {
         commandCallback: async (msg, game) => {
 
             if (msg.content === 'join') {
+                if (game.playerdata.started) return
                 const cmd = msg.content.split(' ')
 
                 // Is there a color?

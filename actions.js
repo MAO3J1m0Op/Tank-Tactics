@@ -2,6 +2,7 @@ const bot = require('./bot')
 const games = require('./games')
 const colors = require('./colors')
 const settings = require('./settings')
+const board = require('./board')
 
 /**
  * 
@@ -129,9 +130,15 @@ module.exports.start = async function(msg, game) {
     // Write positions
     await games.write('playerdata', game)
 
+    // Make the board
+    await board.createBoard(game)
+    await bot.fetchChannel(game, 'board')
+        .send('', { files: [game.path + '/board.png'] })
+        .catch(console.error)
+
     // Declares the game started
     game.playerdata.started = true
-    bot.fetchChannel(game, 'announcements')
+    return bot.fetchChannel(game, 'announcements')
         .send("The game has started!")
 }
 
@@ -155,7 +162,17 @@ module.exports.fire = async function(msg, game, intent, target) {
  * wishes to move.
  */
 module.exports.move = async function(msg, game, direction) {
-
+    const player = game.playerdata.alive[msg.author.id]
+    if (!player) return msg.reply("You can't do that! You aren't playing.")
+    const dest = player.position
+    
+    switch (direction) {
+        case 'up': ++dest[1]; break
+        case 'down': --dest[1]; break
+        case 'left': --dest[0]; break
+        case 'right': ++dest[0]; break
+    }
+    const boardEmptyPromise = board.emptyCell(game, player.position)
 }
 
 /**
