@@ -1,54 +1,57 @@
 {
-    "board": {
-        "description": "Settings for the board image.",
-        "settings": {
-            "border_width": {
-                "type": "int",
-                "bounds": [1, null],
-                "description": "The width of the borders between cells, in pixels.",
-                "default": 1,
-                "allow_null": false
-            },
-            "border_color": {
-                "type": "color",
-                "description": "The color of the borders between cells.",
-                "default": "#000000",
-                "allow_null": false
-            },
-            "cell_size": {
-                "type": "int",
-                "bounds": [1, null],
-                "description": "The length and width of the cells.",
-                "default": 5,
-                "allow_null": false
-            },
-            "empty_cell_color": {
-                "type": "color",
-                "description": "The color of empty cells.",
-                "default": "#FFFFFF",
-                "allow_null": false
+    "description": "These are all of the settings for the game of Tank Tactics. For more information about each setting, run the command `settings get <setting>`.",
+    "settings": {
+        "board": {
+            "description": "Settings for the board image.",
+            "settings": {
+                "border_width": {
+                    "type": "int",
+                    "bounds": [1, null],
+                    "description": "The width of the borders between cells, in pixels.",
+                    "default": 1,
+                    "allow_null": false
+                },
+                "border_color": {
+                    "type": "color",
+                    "description": "The color of the borders between cells.",
+                    "default": "#000000",
+                    "allow_null": false
+                },
+                "cell_size": {
+                    "type": "int",
+                    "bounds": [1, null],
+                    "description": "The length and width of the cells.",
+                    "default": 5,
+                    "allow_null": false
+                },
+                "empty_cell_color": {
+                    "type": "color",
+                    "description": "The color of empty cells.",
+                    "default": "#FFFFFF",
+                    "allow_null": false
+                }
             }
+        },
+        "personal_space_size": {
+            "type": "int",
+            "bounds": [2, null],
+            "description": "The length and height of the square area designated for each player's initial position.",
+            "default": 5,
+            "allow_null": false
+        },
+        "player_minimum": {
+            "type": "int",
+            "bounds": [1, null],
+            "description": "The game will not start unless the player minimum has been reached.",
+            "default": 4,
+            "allow_null": false
+        },
+        "player_maximum": {
+            "type": "int",
+            "bounds": [1, null],
+            "description": "The game will automatically start when this threshold is reached. Set this setting to null if no player maximum is desired.",
+            "default": null,
+            "allow_null": true
         }
-    },
-    "personal_space_size": {
-        "type": "int",
-        "bounds": [2, null],
-        "description": "The length and height of the square area designated for each player's initial position.",
-        "default": 5,
-        "allow_null": false
-    },
-    "player_minimum": {
-        "type": "int",
-        "bounds": [1, null],
-        "description": "The game will not start unless the player minimum has been reached.",
-        "default": 4,
-        "allow_null": false
-    },
-    "player_maximum": {
-        "type": "int",
-        "bounds": [1, null],
-        "description": "The game will automatically start when this threshold is reached. Set this setting to null if no player maximum is desired.",
-        "default": null,
-        "allow_null": true
     }
 }
