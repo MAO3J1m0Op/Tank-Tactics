@@ -91,7 +91,6 @@ module.exports.newGame = async function(guild, name) {
         settings: {},
         playerdata: {
             alive: {},
-            jury: [],
             started: false
         },
         discord: {}
