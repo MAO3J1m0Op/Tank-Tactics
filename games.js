@@ -30,11 +30,15 @@ module.exports.loadAllActive = async function() {
                     .then(() => console.log(`Loaded game ${name} from guild `
                         + `${guild.name} (ID ${guild.id}).`))
                     .catch(err => {
+                        if (err.code === 'ENOTDIR') return
                         console.log(`Error loading game ${name} from guild `
                             + `${guild.name} (ID ${guild.id}).`)
                         console.error(err)
                     })
             }))
+            .catch(err => {
+                if (err.code !== 'ENOTDIR') throw err
+            })
     })
 
     return Promise.all(promises)
@@ -125,11 +129,24 @@ module.exports.newGame = async function(guild, name) {
 }
 
 /**
+ * Returns the tank at the given position, or undefined if there isn't one.
+ * @param {Game} game the game where the tank will be found.
+ * @param {Position} pos the position to search for a tank.
+ */
+module.exports.tankAt = function(game, pos) {
+    for (const p in game.playerdata.alive) {
+        const element = game.playerdata.alive[p];
+        if (element.position[0] === pos[0] 
+            && element.position[1] === pos[1]) return element
+    }
+}
+
+/**
  * Loads in a new game from memory.
  * @param {discord.Guild} guild the guild for this game.
  * @param {string} name the name of the game to load.
  */
- module.exports.loadGame = async function(guild, name) {
+module.exports.loadGame = async function(guild, name) {
     
     /** @type {Game} */
     const game = {

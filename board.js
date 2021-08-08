@@ -56,14 +56,7 @@ module.exports.createBoard = async function(game) {
             }
             if (!color) color = empty_cell_color
 
-            img.scan(
-                x * (border_width + cell_size) + border_width,
-                y * (border_width + cell_size) + border_width,
-                cell_size, cell_size, 
-                function(x, y, offset) 
-            {
-                this.bitmap.data.writeUInt32BE(hexToInt(color), offset, true)
-            })
+            fillCellPrivate(img, game, [x, y], color)
         }
     }
     await img.writeAsync(game.path + '/board.png')
@@ -75,8 +68,31 @@ module.exports.createBoard = async function(game) {
  * @param {Position} pos the position to color.
  * @param {string} color the color to use.
  */
-module.exports.fillCell = function(game, pos, color) {
+module.exports.fillCell = async function(game, pos, color) {
+    const img = await jimp.read(game.path + '/board.png')
+    fillCellPrivate(img, game, pos, color)
+    await img.writeAsync(game.path + '/board.png')
+}
 
+/**
+ * Fills a cell on an existing image object without exporting the image.
+ * @param {jimp} img the Jimp image object.
+ * @param {Game} game the game whose map will be updated.
+ * @param {Position} pos the position of the cell.
+ * @param {string} color the color of the cell.
+ */
+function fillCellPrivate(img, game, pos, color) {
+    const cell_size = settings.get(['board', 'cell_size'], game)
+    const border_width = settings.get(['board', 'border_width'], game)
+    const colorNum = hexToInt(color)
+    return img.scan(
+        pos[0] * (border_width + cell_size) + border_width,
+        pos[1] * (border_width + cell_size) + border_width,
+        cell_size, cell_size, 
+        function(x, y, offset)
+    {
+        this.bitmap.data.writeUInt32BE(colorNum, offset, true)
+    })
 }
 
 /**
@@ -85,6 +101,23 @@ module.exports.fillCell = function(game, pos, color) {
  * @param {Position} pos the position to empty.
  */
 module.exports.emptyCell = function(game, pos) {
-    return module.exports.fillCell(pos, settings.get(
+    return module.exports.fillCell(game, pos, settings.get(
         ['board', 'empty_cell_color'], game))
+}
+
+/**
+ * Moves a tank on the board by filling the cell at the original position with
+ * the empty cell color and filling the cell at the new position with the tank
+ * color.
+ * @param {Game} game the game where the tank is moved.
+ * @param {Position} pos the original position of the tank.
+ * @param {Position} dest the destination where the tank will be moved.
+ * @param {string} color the color of the tank.
+ */
+module.exports.moveTank = async function(game, pos, dest, color) {
+    const img = await jimp.read(game.path + '/board.png')
+    const empty_cell_color = settings.get(['board', 'empty_cell_color'], game)
+    fillCellPrivate(img, game, pos, empty_cell_color)
+    fillCellPrivate(img, game, dest, color)
+    await img.writeAsync(game.path + '/board.png')
 }

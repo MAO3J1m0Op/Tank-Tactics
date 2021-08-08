@@ -8,7 +8,7 @@
                     "type": "int",
                     "bounds": [1, null],
                     "description": "The width of the borders between cells, in pixels.",
-                    "default": 1,
+                    "default": 5,
                     "allow_null": false
                 },
                 "border_color": {
@@ -21,7 +21,7 @@
                     "type": "int",
                     "bounds": [1, null],
                     "description": "The length and width of the cells.",
-                    "default": 5,
+                    "default": 20,
                     "allow_null": false
                 },
                 "empty_cell_color": {
@@ -36,8 +36,14 @@
             "type": "int",
             "bounds": [2, null],
             "description": "The length and height of the square area designated for each player's initial position.",
-            "default": 5,
+            "default": 7,
             "allow_null": false
+        },
+        "fire_range": {
+            "type": "int",
+            "bounds": [1, null],
+            "description": "The maximum number of squares away from the player (diagonals measured as 1) another tank can be while remaining in range of the player.",
+            "default": 3
         },
         "player_minimum": {
             "type": "int",

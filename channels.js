@@ -50,78 +50,104 @@ module.exports = {
         create: createFactory('actions'),
         commandCallback: async (msg, game) => {
 
-            if (msg.content === 'join') {
-                if (game.playerdata.started) return
-                const cmd = msg.content.split(' ')
+            const cmd = msg.content.toLowerCase().split(' ')
+            /** @type {actions.Action} */
+            let action
+            /** @type {any[]} */
+            let args = []
 
-                // Is there a color?
-                return actions.join(msg, game, 
-                    cmd[1] === 'as' && cmd[2] ? cmd[2] : null)
+            // Jump table gets the command and the arguments
+            switch (cmd[0]) {
+                case 'join':
+                    action = actions.join
+                    args = [cmd[1] === 'as' && cmd[2] ? cmd[2] : null]
+                    break
+                case 'actions':
+                    action = actions.actions
+                    break
+                case 'start':
+                    action = actions.start
+                    break
+                case 'quit':
+                    action = actions.quit
+                    break
+                case 'fire':
+                    switch (cmd[1]) {
+                        case 'at':
+                            args = [true]
+                            break
+                        case 'to':
+                            args = [false]
+                            break
+                        default:
+                            return msg.reply('For the fire command, use `fire at '
+                            + '<player>` to attack a player, and `fire to '
+                            + '<player>` to give an action point to a player.')
+                    }
+                    const target = bot.parseMention(cmd[2])
+                    if (!target) {
+                        return msg.reply('Your target must be a mentioned player.')
+                    }
+                    action = actions.fire
+                    args.push(target)
+                    break
+                case 'move':
+                    switch (cmd[1]) {
+                        case 'up':
+                        case 'down':
+                        case 'left':
+                        case 'right':
+                            args = [cmd[1]]
+                            break
+                        default:
+                            return msg.reply("You can't do that! Please specify "
+                                + 'a valid direction (up/down/left/right).')
+                    }
+                    action = actions.move
+                    break
+                case 'setting':
+                    switch (cmd[1]) {
+                        case 'get':
+                            args = [cmd[2] ? cmd[2].split('.') : []]
+                            action = actions.settingGet
+                            break
+                        case 'set':
+                            args = [cmd[2] ? cmd[2].split('.') : [], cmd[3]]
+                            action = actions.settingSet
+                            break
+                        default:
+                            return msg.reply('You must "get" or "set" a setting.')
+                    }
+                    break
+                default: return
             }
 
-            else if (msg.content === 'start') {
-                return actions.start(msg, game)
+            // TODO: verify the GM role
+
+            // Pick the action to execute
+            let func
+            if (game.playerdata.started) {
+                if (!action.afterStart) return
+                func = action.afterStart
+            } else {
+                if (!action.beforeStart) return
+                func = action.beforeStart
             }
+
+            // Ensure the player is playing
+            if (action.playersOnly && !game.playerdata.alive[msg.author.id])
+                return msg.reply("You can't do that! You're not playing.")
             
-            else if (msg.content === 'quit') {
-                return msg.reply('Sorry to see you go! Your tank has been '
-                    + 'destroyed; you are now a member of the jury.')
-            }
-            
-            else if (msg.content.startsWith('fire')) {
-                const cmd = msg.content.split(' ')
-                let intent
-                if (msg.content[1] === 'at') {
-                    // fire at a person
-                    intent = true
-                } else if (msg.content[1] === 'to') {
-                    // fire action point to a person
-                    intent = false
-                } else {
-                    return msg.reply('For the fire command, use "fire at '
-                        + '<player>" to attack a player, and "fire to '
-                        + '<player" to give an action point to a player.')
-                }
-
-                const target = bot.parseMention(msg.content[2])
-                if (!target) {
-                    return msg.reply('Your target must be a mentioned player.')
-                }
-
-                return actions.fire(msg, game, intent, target)
-
-            } else if (msg.content.startsWith('move')) {
-                const dir = msg.content.split(' ')[1]
-                switch (dir) {
-                    case 'up':
-                    case 'down':
-                    case 'left':
-                    case 'right':
-                        return actions.move(msg, game, dir)
-                    default:
-                        return msg.reply("You can't do that! Please specify "
-                            + 'a valid direction (up/down/left/right).')
-                }
+            // Action point check
+            if (action.costsPoint) {
+                if (!game.playerdata.alive[msg.author.id].actions)
+                    return msg.reply("You can't do that! You don't have an "
+                        + "action point to spare.")
             }
 
-            else if (msg.content.startsWith('setting')) {
-                /** @type {string[]} */
-                const cmd = msg.content.split(' ')
-                const dirStr = cmd[1]
-                let dir
-                switch (dirStr) {
-                    case 'get': dir = false; break
-                    case 'set': dir = true; break
-                    default:
-                        return msg.reply('You must "get" or "set" a setting.')
-                }
-                const setting = cmd[2] ? cmd[2].split('.') : []
-                const value = dir ? cmd[3] : undefined
-                if (dir && !value)
-                    return msg.reply("Please specify a value for updating the "
-                        + "setting.")
-                return actions.setting(msg, game, dir, setting, value)
-            }
+            // Now, execute the function
+            return func(msg, game, ...args)
+                .then(response => { if (response) return msg.reply(response) })
         }
     },
     jury: {

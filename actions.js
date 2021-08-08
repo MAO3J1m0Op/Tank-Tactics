@@ -5,211 +5,397 @@ const settings = require('./settings')
 const board = require('./board')
 
 /**
- * 
- * @param {discord.Message} msg 
- * @param {Game} game 
- * @param {string} color the player color
+ * @typedef {Object} Action Object that encompasses an action for #actions.
+ * @property {ActionFunction} beforeStart the function to invoke if the command
+ * is called before the game starts, or null if this command is not to be invoked
+ * before the game starts.
+ * @property {ActionFunction} afterStart the function to invoke if the command
+ * is called during the game, or null if this command is not to be invoked during
+ * the game.
+ * @property {string} syntax a string representing the syntax of the action.
+ * @property {boolean} playersOnly true if this command is restricted to players.
+ * @property {boolean} gmOnly true if this command is restricted to the game GM.
+ * @property {boolean} costsPoint does this command cost an action point.
  */
-module.exports.join = async function(msg, game, color) {
-    if (game.playerdata.started)
-        return msg.reply("Sorry, but the game has already started.")
 
-    // Players that have already joined cannot join again
-    if (game.playerdata.alive[msg.author.id])
-        return msg.reply("You've been welcomed...I guess you wanna hear "
-            + "it twice?")
+/**
+ * @callback ActionFunction A function that is invoked for the action.
+ * @param {discord.Message} msg the message sent invoking the action.
+ * @param {Game} game the game in which the action was sent.
+ * @returns {Promise<string>} a promise to a message which will be sent as a
+ * reply to the invoking message.
+ */
 
-    // Choose the color
-    if (color) {
+/** 
+ * @type {Action} Joins the game.
+ */
+module.exports.join = {
+    syntax: 'join as <color>',
+    gmOnly: false,
+    costsPoint: false,
+    playersOnly: false,
+    /**
+     * @type {ActionFunction}
+     * @param {string} color the color to assign to the player.
+     */
+    beforeStart: async function(msg, game, color) {
+        
+        // Players that have already joined cannot join again
+        if (game.playerdata.alive[msg.author.id])
+            return "You've been welcomed...I guess you wanna hear it twice?"
 
-        // Ensures the selected color is valid
-        if (!colors.allColors.includes(color)) {
-            return msg.reply("The color you've picked is not on file."
-                + " Try another.")
+        // Choose the color
+        if (color) {
+
+            // Ensures the selected color is valid
+            if (!colors.allColors.includes(color)) {
+                return "The color you've picked is not on file. Try another."
+            }
+
+            // Ensures the selected color is unused
+            if (!colors.unusedColors(game).includes(color)) {
+                return "The color you've chosen is already used."
+            }
+        } else {
+
+            // Random unused color
+            color = colors.randomUnused(game)
+
+            // No colors?
+            if (!color) {
+                return "There's no more colors to give ya!"
+            }
         }
+        
+        // Adds user to role
+        const role = game.guild.roles.cache.get(game.discord.playerRole)
+        await msg.guild.members.cache.get(msg.author.id).roles.add(role)
 
-        // Ensures the selected color is unused
-        if (!colors.unusedColors(game).includes(color)) {
-            return msg.reply("The color you've chosen is already used.")
+        // Sets up their player data entry
+        game.playerdata.alive[msg.author.id] = { 
+            color: color,
+            actions: 0,
+            health: 3,
+            id: msg.author.id,
+            position: null
         }
-    } else {
+        await games.write('playerdata', game)
 
-        // Random unused color
-        color = colors.randomUnused(game)
-
-        // No colors?
-        if (!color) {
-            return msg.reply("There's no more colors to give ya!")
-        }
+        // Reply
+        await bot.fetchChannel(game, 'announcements')
+                .send(`Welcome ${msg.author} to the game!`)
+        return 'Welcome to the game!'
+    },
+    afterStart: async function(msg, game) {
+        return 'Sorry, but the game has already started.'
     }
-    
-    // Adds user to role
-    const role = game.guild.roles.cache.get(game.discord.playerRole)
-    await msg.guild.members.cache.get(msg.author.id).roles.add(role)
+}
 
-    // Sets up their player data entry
-    game.playerdata.alive[msg.author.id] = { 
-        color: color,
-        actions: 0,
-        health: 3,
-        id: msg.author.id,
-        position: null
+/** 
+ * @type {Action} Starts the game.
+ */
+module.exports.start = {
+    syntax: 'start',
+    gmOnly: true,
+    costsPoint: false,
+    playersOnly: false,
+    afterStart: null,
+    beforeStart: async function(msg, game) {
+        // Get the dimensions of the board
+
+        // Each player will have a NxN area to themselves where they will spawn
+        // Below figures out how many of these areas we will need
+
+        // Player count
+        const playerCount = Object.keys(game.playerdata.alive).length
+
+        // Find largest factor of playerCount
+        const sqrt = Math.floor(Math.sqrt(playerCount))
+        let factor
+        for (let fTest = sqrt; fTest >= 1; --fTest) {
+            if (playerCount % fTest == 0) {
+                factor = fTest
+                break
+            }
+        }
+
+        // Now we have our dimensions
+        const unscaledDims = {
+            x: Math.ceil(playerCount / factor),
+            y: factor
+        }
+
+        // Scale by N, where N is the size of a tank's "personal space"
+        const N = settings.get(['personal_space_size'], game)
+        const dims = {
+            x: unscaledDims.x * N,
+            y: unscaledDims.y * N
+        }
+
+        // Input board dimensions into the game
+        game.playerdata.boardMin = [0, 0]
+        game.playerdata.boardSize = [dims.x, dims.y]
+
+        // Determine start positions for each player
+        let i = 0
+        for (const name in game.playerdata.alive) {
+            if (Object.hasOwnProperty.call(game.playerdata.alive, name)) {
+                const player = game.playerdata.alive[name];
+                
+                // Get personal space position
+                const yBaseUnscaled = Math.floor(i / unscaledDims.x)
+                const xBase = (i - yBaseUnscaled * unscaledDims.x) * N
+                const yBase = yBaseUnscaled * N
+
+                // Generate 2 random numbers: x and y
+                const xOffset = Math.floor(Math.random() * N)
+                const yOffset = Math.floor(Math.random() * N)
+
+                player.position = [xBase + xOffset, yBase + yOffset]
+                player.health = 3
+                player.actions = 0
+            }
+            ++i
+        }
+
+        // Write positions
+        game.playerdata.started = true
+        await games.write('playerdata', game)
+
+        // Make the board
+        await board.createBoard(game)
+            .then(() => bot.updateBoard(game))
+
+        // Declares the game started
+        await bot.fetchChannel(game, 'announcements')
+            .send("The game has started!")
     }
-    await games.write('playerdata', game)
-
-    // Reply
-    return Promise.all([
-        msg.reply("Welcome to the game!"),
-        bot.fetchChannel(game, 'announcements')
-            .send(`Welcome ${msg.author} to the game!`)
-    ])
 }
 
 /**
- * Starts a game!
- * @param {discord.Message} msg 
- * @param {Game} game 
+ * @type {Action} Quits the game.
  */
-module.exports.start = async function(msg, game) {
+module.exports.quit = {
+    syntax: 'quit',
+    gmOnly: false,
+    costsPoint: false,
+    playersOnly: true,
+    beforeStart: async function(msg, game) {
+        delete game.playerdata.alive[msg.author.id]
+        await games.write('playerdata', game)
+        await game.guild.member(msg.author.id)
+            .roles.remove(bot.fetchRole(game, 'player'))
+        return 'Sorry to see you go!'
+    },
+    afterStart: async function(msg, game) {
+        // Delete the tank
+        const boardP = board.emptyCell(game, 
+            game.playerdata.alive[msg.author.id].position)
+        .then(() => bot.updateBoard(game))
 
-    // Get the dimensions of the board
+        // Assign roles
+        const roleP = Promise.all([
+            game.guild.member(msg.author).roles.remove(bot.fetchRole(game, 'player')),
+            game.guild.member(msg.author).roles.add(bot.fetchRole(game, 'juror'))
+        ])
 
-    // Each player will have a NxN area to themselves where they will spawn
-    // Below figures out how many of these areas we will need
+        // Manage playerdata
+        delete game.playerdata.alive[msg.author.id]
+        const writeP = games.write('playerdata', game)
 
-    // Player count
-    const playerCount = Object.keys(game.playerdata.alive).length
+        await Promise.all([roleP, writeP, boardP])
+        await bot.fetchChannel(game, 'announcements')
+            .send(`The tank of ${msg.author} has exploded. You may see them lurking`
+                + ` as a member of ${bot.fetchRole(game, 'juror')}.`)
+        return 'Sorry to see you go!'
+    }
+}
 
-    // Find largest factor of playerCount
-    const sqrt = Math.floor(Math.sqrt(playerCount))
-    let factor
-    for (let fTest = sqrt; fTest >= 1; --fTest) {
-        if (playerCount % fTest == 0) {
-            factor = fTest
-            break
+/**
+ * @type {Action} Fires a shot at a player.
+ */
+module.exports.fire = {
+    syntax: 'fire <"at"|"to"> <player>',
+    gmOnly: false,
+    costsPoint: true,
+    beforeStart: null,
+    /**
+    * @type {ActionFunction}
+    * @param {boolean} intent true if the intent was to attack (at), false if the
+    * intent was to share action points (to).
+    * @param {discord.User} target the user targeted by the fire.
+    */
+    afterStart: async function(msg, game, intent, target) {
+        // Check if the player is in range
+        const userinfo = game.playerdata.alive[msg.author.id]
+        const targetinfo = game.playerdata.alive[target.id]
+        const range = settings.get(['fire_range'], game)
+
+        if (Math.abs(userinfo.position[0] - targetinfo.position[0]) > range
+            || Math.abs(userinfo.position[1] - targetinfo.position[1]) > range)
+        {
+            return `You can't do that! ${target} is not in range.`
+        }
+
+        --userinfo.actions
+
+        if (intent) {
+            --targetinfo.health
+            if (!targetinfo.health) {
+
+                // Do a hack where msg.author is overwritten to be the player
+                // destroyed. This is for code reusability I promise.
+                msg.author = target
+
+                await module.exports.quit.afterStart(msg, game)
+                    .then(() => games.write('playerdata', game))
+                return`You fired the fatal shot at ${target}.`
+            }
+            await games.write('playerdata', game)
+            return `You fired a shot at ${target}. Their tank now has `
+                + `${targetinfo.health} health.`
+        } else {
+            ++targetinfo.actions
+            await games.write('playerdata', game)
+            return `You fired an action point to ${target}.`
         }
     }
-
-    // Now we have our dimensions
-    const unscaledDims = {
-        x: Math.ceil(playerCount / factor),
-        y: factor
-    }
-
-    // Scale by N, where N is the size of a tank's "personal space"
-    const N = 5
-    const dims = {
-        x: unscaledDims.x * N,
-        y: unscaledDims.y * N
-    }
-
-    // Input board dimensions into the game
-    game.playerdata.boardMin = [0, 0]
-    game.playerdata.boardSize = [dims.x, dims.y]
-
-    // Determine start positions for each player
-    let i = 0
-    for (const name in game.playerdata.alive) {
-        if (Object.hasOwnProperty.call(game.playerdata.alive, name)) {
-            const player = game.playerdata.alive[name];
-            
-            // Get personal space position
-            const yBaseUnscaled = Math.floor(i / unscaledDims.x)
-            const xBase = (i - yBaseUnscaled * unscaledDims.x) * N
-            const yBase = yBaseUnscaled * N
-
-            // Generate 2 random numbers: x and y
-            const xOffset = Math.floor(Math.random() * N)
-            const yOffset = Math.floor(Math.random() * N)
-
-            player.position = [xBase + xOffset, yBase + yOffset]
-        }
-        ++i
-    }
-
-    // Write positions
-    await games.write('playerdata', game)
-
-    // Make the board
-    await board.createBoard(game)
-    await bot.fetchChannel(game, 'board')
-        .send('', { files: [game.path + '/board.png'] })
-        .catch(console.error)
-
-    // Declares the game started
-    game.playerdata.started = true
-    return bot.fetchChannel(game, 'announcements')
-        .send("The game has started!")
 }
 
 /**
- * 
- * @param {discord.Message} msg 
- * @param {Game} game 
- * @param {boolean} intent true if the intent was to attack (at), false if the
- * intent was to share action points (to).
- * @param {discord.User} target the user targeted by the fire.
+ * @type {Action} DM's a player their action point count.
  */
-module.exports.fire = async function(msg, game, intent, target) {
-
-}
-
-/**
- * Moves the player's tank in the specified direction.
- * @param {discord.Message} msg 
- * @param {Game} game 
- * @param {'up' | 'down' | 'left' | 'right'} direction the direction the player
- * wishes to move.
- */
-module.exports.move = async function(msg, game, direction) {
-    const player = game.playerdata.alive[msg.author.id]
-    if (!player) return msg.reply("You can't do that! You aren't playing.")
-    const dest = player.position
-    
-    switch (direction) {
-        case 'up': ++dest[1]; break
-        case 'down': --dest[1]; break
-        case 'left': --dest[0]; break
-        case 'right': ++dest[0]; break
-    }
-    const boardEmptyPromise = board.emptyCell(game, player.position)
-}
-
-/**
- * Updates or gets the value of a setting.
- * @param {discord.Message} msg 
- * @param {Game} game 
- * @param {boolean} getOrSet true if setting, false if getting.
- * @param {string[]} settingName the setting to get.
- * @param {string} [value] the new value of the setting (if setting).
- */
-module.exports.setting = async function(msg, game, getOrSet, settingName, value)
-{
-    // Get
-    if (!getOrSet) {
-        let content
+module.exports.actions = {
+    syntax: 'actions',
+    gmOnly: false,
+    costsPoint: false,
+    playersOnly: true,
+    beforeStart: null,
+    afterStart: async function(msg, game) {
+        const playerdata = game.playerdata.alive[msg.author.id]
         try {
-            content = settings.infoMessage(settingName, game)
+            await msg.author.send(`You have ${playerdata.actions} action points to spare.`)
+            return "Check your DM's!"
         } catch (err) {
-            if (!(err instanceof settings.SettingNotFoundError)) throw err
-            return msg.reply(err.message)
+            console.error(err)
+            return "I wasn't able to DM you."
         }
-        return msg.reply(content)
     }
+}
 
-    // Set
+/**
+ * @type {Action} Moves the player's tank in the specified direction.
+ */
+module.exports.move = {
+    syntax: 'move <"up"|"down"|"left"|"right">',
+    gmOnly: false,
+    costsPoint: true,
+    playersOnly: true,
+    beforeStart: null,
+    /**
+     * @type {ActionFunction}
+     * @param {'up' | 'down' | 'left' | 'right'} direction the direction the
+     * player wishes to move.
+     */
+    afterStart: async function(msg, game, direction) {
+        const player = game.playerdata.alive[msg.author.id]
+        const dest = [...player.position]
+        
+        switch (direction) {
+            case 'up': 
+                --dest[1]
+                if (dest[1] < game.playerdata.boardMin[1]) {
+                    return "You can't do that! There's an edge there."
+                }
+                break
+            case 'down':
+                ++dest[1]
+                if (dest[1] >= game.playerdata.boardMin[1] + game.playerdata.boardSize[1]) {
+                    return "You can't do that! There's an edge there."
+                }
+                break
+            case 'left':
+                --dest[0]
+                if (dest[0] < game.playerdata.boardMin[0]) {
+                    return "You can't do that! There's an edge there."
+                }
+                break
+            case 'right':
+                ++dest[0]
+                if (dest[0] >= game.playerdata.boardMin[0] + game.playerdata.boardSize[0]) {
+                    return "You can't do that! There's an edge there."
+                }
+                break
+        }
+        if (games.tankAt(game, dest)) {
+            return "You can't do that! There's a tank there."
+        }
+
+        const boardp = board.moveTank(game, player.position, dest, colors[player.color])
+            .then(() => bot.updateBoard(game))
+        --player.actions
+        player.position = dest
+        const filep = games.write('playerdata', game)
+
+        await Promise.all([boardp, filep])
+        return 'Your tank has moved.'
+    }
+}
+
+/**
+ * @type {Action} Gets info about a particular setting.
+ */
+module.exports.settingGet = {
+    syntax: 'setting get <setting>',
+    gmOnly: false,
+    costsPoint: false,
+    playersOnly: false,
+    beforeStart: getSettingAction,
+    afterStart: getSettingAction
+}
+
+/**
+ * @type {ActionFunction}
+ * @param {string[]} settingName the setting to get.
+ */
+async function getSettingAction(msg, game, settingName) {
+    let content
+    try {
+        content = settings.infoMessage(settingName, game)
+    } catch (err) {
+        if (!(err instanceof settings.SettingNotFoundError)) throw err
+        return err.message
+    }
+    return content
+}
+
+/**
+ * @type {Action} Sets the value of settings.
+ */
+module.exports.settingSet = {
+    syntax: 'setting set <setting> <value>',
+    gmOnly: true,
+    costsPoint: false,
+    playersOnly: false,
+    beforeStart: setSettingAction,
+    afterStart: setSettingAction
+}
+
+/**
+ * @type {ActionFunction}
+ * @param {string[]} settingName the setting to get.
+ * @param {string} value the value for the new setting. 
+ */
+async function setSettingAction(msg, game, settingName, value) {
     let parsed
     try {
         parsed = settings.parse(value, settingName)
     } catch (err) {
         if (!(err instanceof settings.SettingError)) throw err
-        if (err instanceof settings.SettingNotFoundError)
-            return msg.reply(err.message)
-        return msg.reply("That value doesn't work for that setting.\n```"
-            + err.message + '```')
+        if (err instanceof settings.SettingNotFoundError) return err.message
+        return "That value doesn't work for that setting.\n```" + err.message + '```'
     }
     settings.set(game, settingName, value)
     await games.write('settings', game)
-    return msg.reply('Successfully updated the value of '
-        + settings.properName(settingName))
+    return 'Successfully updated the value of ' + settings.properName(settingName)
 }

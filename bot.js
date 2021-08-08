@@ -43,12 +43,31 @@ module.exports.ready
     .then(() => games.loadAllActive())
 
 /**
+ * Fetches the object for one of the roles.
+ * @param {Game} game the game to fetch the role from.
+ * @param {string} roleName the internal name of the role to fetch.
+ */
+module.exports.fetchRole = function(game, roleName) {
+    return game.guild.roles.cache.get(game.discord[roleName + 'Role'])
+}
+
+/**
  * Fetches the object for one of the game channels.
  * @param {Game} game the game from which the channel to be fetched will belong.
  * @param {string} channelName the name of the channel to fetch.
  */
 module.exports.fetchChannel = function(game, channelName) {
     return bot.channels.cache.get(game.discord[channelName + 'ID'])
+}
+
+/**
+ * Sends the current instance of the board image to the board channel.
+ * @param {Game} game the game whose board will be updated.
+ * @returns {Promise<discord.Message>} a promise to the message sent.
+ */
+module.exports.updateBoard = function(game) {
+    return module.exports.fetchChannel(game, 'board')
+        .send('', { files: [game.path + '/board.png'] })
 }
 
 /**
@@ -95,4 +114,7 @@ bot.on('message', msg => {
 
 process.on('unhandledRejection', (reason, promise) => {
     console.log('Unhandled Promise Rejection:', reason)
+})
+process.on('SIGINT', () => {
+    bot.destroy()
 })
