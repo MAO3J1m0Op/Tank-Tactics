@@ -77,6 +77,35 @@ function addGame(guild, name, game) {
 } 
 
 /**
+ * How to play message.
+ * @param {Game} game the game object for channel mentions.
+ */
+async function sendHowToPlay(game) {
+    const ann = bot.fetchChannel(game, 'announcements')
+    const brd = bot.fetchChannel(game, 'board')
+    const act = bot.fetchChannel(game, 'actions')
+    await ann.send(
+        "Welcome to Tank Tactics! Here's how to play.\n\n"
+        + "Each tank has 3 lives. Each day, every player will be granted "
+        + "an action point, which can be used to move or fire at tanks within"
+        + " range. You can also fire action points _to_ tanks. Last tank "
+        + "standing wins! Simple!\n"
+        + `Once the game starts, you'll see the board on ${brd}. To control your`
+        + ` tank, write your commands on ${act}. You can send these at any `
+        + "time, but each command requires one action point. Find important "
+        + `information here on ${ann}.\n`
+        + "If your tank explodes, the game's not over for you just yet. You will "
+        + "join the jury! They will convene on the secret "
+        + `${bot.fetchChannel(game, 'jury')} channel daily. If three jurors `
+        + "vote for you, you'll receive one extra action point!\n"
+        + `Hop on over to the ${act} channel and type the message "join" to get `
+        + "in on this explosive action!")
+
+    // TODO add action list
+    // TODO mention GM
+}
+
+/**
  * Sets up a new game.
  * @param {discord.Guild} path the path to which the game data will be written.
  * @param {string} name the name of the game.
@@ -124,6 +153,10 @@ module.exports.newGame = async function(guild, name) {
     ])
 
     addGame(guild, name, game)
+
+    // Send the how to play announcement
+    sendHowToPlay(game)
+
     return game
 }
 
