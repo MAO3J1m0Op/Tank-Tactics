@@ -108,12 +108,15 @@ module.exports.parseMention = function(mention) {
 // TODO: slash commands?
 bot.on('message', msg => {
     // Natural language processing :P
-    if (msg.content === "tanky tanky") {
+    const prefix = "Start a new game named "
+    if (msg.content.startsWith(prefix)) {
+
+        let name = msg.content.slice(prefix.length)
         
         // Start the game.
         console.log(`Starting game in guild ${msg.guild.name} (ID ${msg.guild.id}).`)
 
-        loadedGames = games.newGame(msg.guild, 'Loaded Tank Tactics Test')
+        loadedGames = games.newGame(msg.guild, name)
     }
 })
 
