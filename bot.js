@@ -122,4 +122,15 @@ process.on('unhandledRejection', (reason, promise) => {
 })
 process.on('SIGINT', () => {
     bot.destroy()
+    process.stdin.destroy()
+})
+
+process.stdin.resume()
+process.stdin.addListener('data', data => {
+    data = data.toString().trim()
+    console.log('Command received: ' + data)
+    if (data === 'reload') {
+        console.log('Reloading!')
+        games.loadAllActive()
+    }
 })
