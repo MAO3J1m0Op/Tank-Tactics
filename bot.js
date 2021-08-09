@@ -65,9 +65,14 @@ module.exports.fetchChannel = function(game, channelName) {
  * @param {Game} game the game whose board will be updated.
  * @returns {Promise<discord.Message>} a promise to the message sent.
  */
-module.exports.updateBoard = function(game) {
-    return module.exports.fetchChannel(game, 'board')
-        .send('', { files: [game.path + '/board.png'] })
+module.exports.updateBoard = async function(game) {
+    const board = module.exports.fetchChannel(game, 'board')
+    const msg = board.messages.cache.get(game.discord.boardMsgID)
+    if (msg) await board.messages.delete(msg)
+    const newMsg = await board.send('', { files: [game.path + '/board.png'] })
+    game.discord.boardMsgID = newMsg.id
+    await games.write('discord', game)
+    return newMsg
 }
 
 /**

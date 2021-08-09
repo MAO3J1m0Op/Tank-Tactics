@@ -50,6 +50,7 @@
  * @property {string} boardID the ID of the board channel.
  * @property {string} playerRole the ID of the player role.
  * @property {string} jurorRole the ID of the juror role.
+ * @property {string} boardMsgID the ID of the board message.
  */
 
 /**
