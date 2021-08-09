@@ -125,6 +125,18 @@ async function sendHowToPlay(game) {
         + "vote for you, you'll receive one extra action point!\n"
         + `Hop on over to the ${act} channel and type the message "join" to get `
         + "in on this explosive action!")
+    let actionList = '**Full list of game actions:**\n'
+    for (const action in actions) {
+        /** @type {actions.Action} */
+        const element = actions[action];
+        actionList += `  \`${element.syntax}\``
+        if (element.gmOnly) actionList += '\\*'
+        if (!element.costsPoint) actionList += '+'
+        actionList += '\n'
+    }
+    actionList += '\\*Restricted to the Tank Tactics GM\n'
+    actionList += '\\+Utility command (does not require an action point)'
+    await ann.send(actionList)
 
     // TODO add action list
     // TODO mention GM
