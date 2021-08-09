@@ -83,7 +83,7 @@ module.exports.join = {
 
         // Reply
         await bot.fetchChannel(game, 'announcements')
-                .send(`Welcome ${msg.author} to the game!`)
+                .send(`Welcome ${msg.author}, operator of the ${color} tank, to the game!`)
         return 'Welcome to the game!'
     },
     afterStart: async function(msg, game) {
@@ -185,6 +185,8 @@ module.exports.quit = {
         await games.write('playerdata', game)
         await game.guild.member(msg.author.id)
             .roles.remove(bot.fetchRole(game, 'player'))
+        await bot.fetchChannel(game, 'announcements')
+            .send(`${msg.author} has quit.`)
         return 'Sorry to see you go!'
     },
     afterStart: async function(msg, game) {
