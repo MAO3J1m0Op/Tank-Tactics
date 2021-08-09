@@ -240,6 +240,26 @@ const types = {
             else throw undefined
         }
     },
+    time: {
+        verify: function(value) {
+            if (typeof value !== 'string') return false
+            const match = /^([0-2]?\d):([0-5]\d)$/i.exec(value)
+            if (match) {
+                const hours = parseInt(match[0])
+                if (hours >= 24) return false
+                return true
+            }
+            return false
+        },
+        fromFile: function(value) {
+            return this.verify(value)
+        },
+        fromStr: function(value) {
+            const val = this.verify(value)
+            if (val) return value
+            else throw undefined
+        }
+    }
 }
 
 /**

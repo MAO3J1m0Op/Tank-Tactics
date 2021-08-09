@@ -6,7 +6,8 @@ const fs = require('fs').promises
 
 const bot = require('./bot')
 const channels = require('./channels')
-const settings = require('./settings_default.json')
+const settings = require('./settings')
+const DailyCallback = require('./dailycallback')
 
 /** @type {{ [guildLookup: string]: { [nameLookup: string]: Game }}} */
 const loadedGames = {}
@@ -74,7 +75,31 @@ module.exports.getGames = function(guild) {
 function addGame(guild, name, game) {
     if (!loadedGames[guild.id]) loadedGames[guild.id] = []
     loadedGames[guild.id][name] = game
+
+    // Parse the time
+    const timeStr = settings.get(['action_grant_time'], game)
+    const time = /^(\d\d):([0-5]\d)$/i.exec(timeStr)
+    const hour = parseInt(time[0])
+    const minute = parseInt(time[1])
+    game.dailyCallback = new DailyCallback(game, hour, minute)
 } 
+
+/**
+ * Destroys any persistent elements of the game object.
+ * @param {Game} game the game to unload.
+ */
+function unloadGame(game) {
+    game.dailyCallback.clear()
+}
+
+module.exports.unloadAll = function() {
+    for (const g in loadedGames) {
+        const element = loadedGames[g]
+        for (const name in element) {
+            unloadGame(element[name])
+        }
+    }
+}
 
 /**
  * How to play message.

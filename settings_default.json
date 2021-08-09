@@ -43,7 +43,8 @@
             "type": "int",
             "bounds": [1, null],
             "description": "The maximum number of squares away from the player (diagonals measured as 1) another tank can be while remaining in range of the player.",
-            "default": 3
+            "default": 3,
+            "allow_null": false
         },
         "player_minimum": {
             "type": "int",
@@ -58,6 +59,12 @@
             "description": "The game will automatically start when this threshold is reached. Set this setting to null if no player maximum is desired.",
             "default": null,
             "allow_null": true
+        },
+        "action_grant_time": {
+            "type": "time",
+            "description": "The time where action points are given out. This time is in the time zone of the server.",
+            "default": "00:00",
+            "allow_null": false
         }
     }
 }

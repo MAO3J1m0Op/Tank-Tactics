@@ -71,4 +71,6 @@
  * @property {Object} settings the applied settings for this game.
  * @property {PlayerData} playerdata the player data for the game.
  * @property {DiscordData} discord the Discord data.
+ * @property {import('./dailycallback')} dailyCallback the interval that calls 
+ * the daily callback.
  */
