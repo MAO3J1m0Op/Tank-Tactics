@@ -68,6 +68,9 @@ module.exports = {
                 case 'start':
                     action = actions.start
                     break
+                case 'redraw':
+                    action = actions.redraw
+                    break
                 case 'quit':
                     action = actions.quit
                     break

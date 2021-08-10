@@ -214,6 +214,21 @@ module.exports.quit = {
 }
 
 /**
+ * @type {Action} Redraws the board.
+ */
+module.exports.redraw = {
+    syntax: 'redraw',
+    gmOnly: true,
+    costsPoint: false,
+    beforeStart: null,
+    afterStart: function(msg, game) {
+        return board.createBoard(game)
+            .then(() => bot.updateBoard(game))
+            .then(() => 'The board has been redrawn.')
+    }
+}
+
+/**
  * @type {Action} Fires a shot at a player.
  */
 module.exports.fire = {
