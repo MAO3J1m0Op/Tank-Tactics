@@ -13,6 +13,23 @@ bot.on('message', msg => {
     // Ignore own messages
     if (msg.author === bot.user) return
 
+    // Ignore DMs
+    if (!msg.guild) return
+
+    // Natural language processing :P
+    const prefix = "Start a new game named "
+    if (msg.content.startsWith(prefix)) {
+
+        let name = msg.content.slice(prefix.length)
+        
+        // Start the game.
+        console.log(`Starting game in guild ${msg.guild.name} (ID ${msg.guild.id}).`)
+
+        loadedGames = games.newGame(msg.guild, name)
+
+        return
+    }
+
     const guildGames = games.getGames(msg.guild)
     
     for (const name in guildGames) {
@@ -103,22 +120,6 @@ module.exports.parseMention = function(mention) {
     // I mean it's implied, but it looks cleaner and finished.
 	} else return
 }
-
-// Listening for the create game command anywhere
-// TODO: slash commands?
-bot.on('message', msg => {
-    // Natural language processing :P
-    const prefix = "Start a new game named "
-    if (msg.content.startsWith(prefix)) {
-
-        let name = msg.content.slice(prefix.length)
-        
-        // Start the game.
-        console.log(`Starting game in guild ${msg.guild.name} (ID ${msg.guild.id}).`)
-
-        loadedGames = games.newGame(msg.guild, name)
-    }
-})
 
 process.on('unhandledRejection', (reason, promise) => {
     console.log('Unhandled Promise Rejection:', reason)
