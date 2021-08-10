@@ -247,6 +247,10 @@ module.exports.fire = {
         if (target.id == msg.author.id)
             return 'What are you doing shooting yourself?'
 
+        // Check if target is on the board
+        if (!game.playerdata.alive[target.id])
+            return "You can't do that! They're not playing! No civilian fire!"
+
         // Check if the player is in range
         const userinfo = game.playerdata.alive[msg.author.id]
         const targetinfo = game.playerdata.alive[target.id]
