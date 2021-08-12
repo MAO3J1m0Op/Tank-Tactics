@@ -109,20 +109,10 @@ module.exports.start = {
         // Player count
         const playerCount = Object.keys(game.playerdata.alive).length
 
-        // Find largest factor of playerCount
-        const sqrt = Math.floor(Math.sqrt(playerCount))
-        let factor
-        for (let fTest = sqrt; fTest >= 1; --fTest) {
-            if (playerCount % fTest == 0) {
-                factor = fTest
-                break
-            }
-        }
-
-        // Now we have our dimensions
+        const x = Math.ceil(Math.sqrt(playerCount))
         const unscaledDims = {
-            x: Math.ceil(playerCount / factor),
-            y: factor
+            x: x,
+            y: Math.ceil(playerCount / x)
         }
 
         // Scale by N, where N is the size of a tank's "personal space"
