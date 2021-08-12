@@ -73,7 +73,7 @@ module.exports.getGames = function(guild) {
  * @param {Game} game the game to add.
  */
 function addGame(guild, name, game) {
-    if (!loadedGames[guild.id]) loadedGames[guild.id] = []
+    if (!loadedGames[guild.id]) loadedGames[guild.id] = {}
     loadedGames[guild.id][name] = game
 
     // Parse the time
