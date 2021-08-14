@@ -266,6 +266,9 @@ module.exports.quit = {
         await bot.fetchChannel(game, 'announcements')
             .send(`The tank of ${msg.author} has exploded. You may see them lurking`
                 + ` as a member of ${bot.fetchRole(game, 'juror')}.`)
+        if (Object.keys(game.playerdata.alive).length === 1) {
+            module.exports.end.afterStart(msg, game)
+        }
         return 'Sorry to see you go!'
     }
 }
