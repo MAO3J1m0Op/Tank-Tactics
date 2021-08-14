@@ -77,7 +77,7 @@ function addGame(guild, name, game) {
     loadedGames[guild.id][name] = game
 
     // Parse the time
-    const timeStr = settings.get(['action_grant_time'], game)
+    const timeStr = settings.get('gameplay.action_grant_time', game)
     const time = /^(\d\d):([0-5]\d)$/i.exec(timeStr)
     const hour = parseInt(time[0])
     const minute = parseInt(time[1])

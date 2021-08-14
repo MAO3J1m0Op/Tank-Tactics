@@ -93,10 +93,14 @@ module.exports.infoMessage = function(settingName, game) {
  * Gets a setting value from a game. If a value for the setting does not
  * exist, the setting's default value will be returned. If the setting does
  * not exist or is a category, undefined will be returned.
- * @param {string[]} settingName the name of the setting.
+ * @param {string | string[]} settingName the name of the setting.
  * @param {Game} game the game to pull the setting value from.
  */
 function get(settingName, game) {
+
+    if (typeof settingName === 'string')
+        settingName = settingName.split('.')
+
     let value = game.settings
     for (let i = 0; i < settingName.length; ++i) {
         value = value[settingName[i]]
@@ -117,9 +121,12 @@ module.exports.get = get
  * Verifies if a value works for the passed setting. If it works, the value
  * will be returned. Otherwise, an exception will be thrown.
  * @param {*} value the value to check.
- * @param {string[]} settingName the full name of the setting.
+ * @param {string | string[]} settingName the full name of the setting.
  */
 module.exports.verifyValue = function(value, settingName) {
+
+    if (typeof settingName === 'string')
+        settingName = settingName.split('.')
     
     // Get the setting
     const setting = getSetting(settingName)
@@ -145,10 +152,14 @@ module.exports.verifyValue = function(value, settingName) {
  * Sets the value of a setting to a given value. No validations will be
  * done, so the value passed must be previously validated.
  * @param {Game} game the game whose value will be set.
- * @param {string[]} settingName the name of the setting to set.
+ * @param {string | string[]} settingName the name of the setting to set.
  * @param {*} value the value to assign to the setting.
  */
 module.exports.set = function(game, settingName, value) {
+
+    if (typeof settingName === 'string')
+        settingName = settingName.split('.')
+
     let obj = game.settings
 
     // Ensure the setting exists
@@ -176,10 +187,14 @@ module.exports.set = function(game, settingName, value) {
 /**
  * Parses a string into a value for the requested setting.
  * @param {string} value the value to check against the setting.
- * @param {string[]} settingName the name of the setting.
+ * @param {string | string[]} settingName the name of the setting.
  * @returns the value parsed.
  */
 module.exports.parse = function(value, settingName) {
+
+    if (typeof settingName === 'string')
+        settingName = settingName.split('.')
+
     const setting = getSetting(settingName)
     if (!setting || setting.settings)
         throw new SettingNotFoundError(settingName)
@@ -216,7 +231,7 @@ module.exports.parse = function(value, settingName) {
 
 /** @type {{ [type: string]: TypeVerifier }} */
 const types = {
-    int: {
+    integer: {
         fromFile: function(value) {
             if (typeof value !== 'number') return false
     

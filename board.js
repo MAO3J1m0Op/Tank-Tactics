@@ -22,10 +22,10 @@ function hexToInt(hex) {
  */
 module.exports.createBoard = async function(game) {
 
-    const cell_size = settings.get(['board', 'cell_size'], game)
-    const border_width = settings.get(['board', 'border_width'], game)
-    const border_color = settings.get(['board' ,'border_color'], game)
-    const empty_cell_color = settings.get(['board', 'empty_cell_color'], game)
+    const cell_size = settings.get('board.cell_size', game)
+    const border_width = settings.get('board.border_width', game)
+    const border_color = settings.get('board.border_color', game)
+    const empty_cell_color = settings.get('board.empty_cell_color', game)
 
     const borderCount = {
         x: game.playerdata.boardSize[0] + 1,
@@ -82,8 +82,8 @@ module.exports.fillCell = async function(game, pos, color) {
  * @param {string} color the color of the cell.
  */
 function fillCellPrivate(img, game, pos, color) {
-    const cell_size = settings.get(['board', 'cell_size'], game)
-    const border_width = settings.get(['board', 'border_width'], game)
+    const cell_size = settings.get('board.cell_size', game)
+    const border_width = settings.get('board.border_width', game)
     const colorNum = hexToInt(color)
     return img.scan(
         pos[0] * (border_width + cell_size) + border_width,
@@ -102,7 +102,7 @@ function fillCellPrivate(img, game, pos, color) {
  */
 module.exports.emptyCell = function(game, pos) {
     return module.exports.fillCell(game, pos, settings.get(
-        ['board', 'empty_cell_color'], game))
+        'board.empty_cell_color', game))
 }
 
 /**
@@ -116,7 +116,7 @@ module.exports.emptyCell = function(game, pos) {
  */
 module.exports.moveTank = async function(game, pos, dest, color) {
     const img = await jimp.read(game.path + '/board.png')
-    const empty_cell_color = settings.get(['board', 'empty_cell_color'], game)
+    const empty_cell_color = settings.get('board.empty_cell_color', game)
     fillCellPrivate(img, game, pos, empty_cell_color)
     fillCellPrivate(img, game, dest, color)
     await img.writeAsync(game.path + '/board.png')

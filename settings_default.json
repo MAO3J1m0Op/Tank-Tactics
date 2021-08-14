@@ -5,7 +5,7 @@
             "description": "Settings for the board image.",
             "settings": {
                 "border_width": {
-                    "type": "int",
+                    "type": "integer",
                     "bounds": [1, null],
                     "description": "The width of the borders between cells, in pixels.",
                     "default": 5,
@@ -18,7 +18,7 @@
                     "allow_null": false
                 },
                 "cell_size": {
-                    "type": "int",
+                    "type": "integer",
                     "bounds": [1, null],
                     "description": "The length and width of the cells.",
                     "default": 20,
@@ -32,39 +32,63 @@
                 }
             }
         },
-        "personal_space_size": {
-            "type": "int",
-            "bounds": [2, null],
-            "description": "The length and height of the square area designated for each player's initial position.",
-            "default": 7,
-            "allow_null": false
+        "gameplay": {
+            "description": "Settings that affect the rules of the game.",
+            "settings": {
+                "fire_range": {
+                    "type": "integer",
+                    "description": "The maximum number of squares away from the player (diagonals measured as 1) another tank can be while remaining in range of the player.",
+                    "bounds": [1, null],
+                    "default": 3,
+                    "allow_null": false
+                },
+                "action_grant_time": {
+                    "type": "time",
+                    "description": "The time where action points are given out. This time is in the time zone of the server.",
+                    "default": "00:00",
+                    "allow_null": false
+                },
+                "jury_bonus_minimum": {
+                    "type": "integer",
+                    "bounds": [1, null],
+                    "description": "The minimum number of jurors that must vote for a player in order for that player to receive an extra action point.",
+                    "default": 3,
+                    "allow_null": false
+                },
+                "daily_actions": {
+                    "type": "integer",
+                    "bounds": [0, null],
+                    "description": "The number of action points that players are given each day.",
+                    "default": 1,
+                    "allow_null": false
+                }
+            }
         },
-        "fire_range": {
-            "type": "int",
-            "bounds": [1, null],
-            "description": "The maximum number of squares away from the player (diagonals measured as 1) another tank can be while remaining in range of the player.",
-            "default": 3,
-            "allow_null": false
-        },
-        "player_minimum": {
-            "type": "int",
-            "bounds": [1, null],
-            "description": "The game will not start unless the player minimum has been reached.",
-            "default": 4,
-            "allow_null": false
-        },
-        "player_maximum": {
-            "type": "int",
-            "bounds": [1, null],
-            "description": "The game will automatically start when this threshold is reached. Set this setting to null if no player maximum is desired.",
-            "default": null,
-            "allow_null": true
-        },
-        "action_grant_time": {
-            "type": "time",
-            "description": "The time where action points are given out. This time is in the time zone of the server.",
-            "default": "00:00",
-            "allow_null": false
+        "creation": {
+            "description": "Settings that control the creation of the game.",
+            "settings": {
+                "personal_space_size": {
+                    "type": "integer",
+                    "bounds": [2, null],
+                    "description": "The length and height of the square area designated for each player's initial position.",
+                    "default": 7,
+                    "allow_null": false
+                },
+                "player_minimum": {
+                    "type": "integer",
+                    "bounds": [1, null],
+                    "description": "The game will not start unless the player minimum has been reached.",
+                    "default": 4,
+                    "allow_null": false
+                },
+                "player_maximum": {
+                    "type": "integer",
+                    "bounds": [1, null],
+                    "description": "The game will automatically start when this threshold is reached. Set this setting to null if no player maximum is desired.",
+                    "default": null,
+                    "allow_null": true
+                }
+            }
         }
     }
 }

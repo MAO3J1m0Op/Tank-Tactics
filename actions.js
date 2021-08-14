@@ -116,7 +116,7 @@ module.exports.start = {
         }
 
         // Scale by N, where N is the size of a tank's "personal space"
-        const N = settings.get(['personal_space_size'], game)
+        const N = settings.get('creation.personal_space_size', game)
         const dims = {
             x: unscaledDims.x * N,
             y: unscaledDims.y * N
@@ -244,7 +244,7 @@ module.exports.fire = {
         // Check if the player is in range
         const userinfo = game.playerdata.alive[msg.author.id]
         const targetinfo = game.playerdata.alive[target.id]
-        const range = settings.get(['fire_range'], game)
+        const range = settings.get('gameplay.fire_range', game)
 
         if (Math.abs(userinfo.position[0] - targetinfo.position[0]) > range
             || Math.abs(userinfo.position[1] - targetinfo.position[1]) > range)
