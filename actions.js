@@ -74,8 +74,6 @@ module.exports.join = {
         // Sets up their player data entry
         game.playerdata.alive[msg.author.id] = { 
             color: color,
-            actions: 0,
-            health: 3,
             id: msg.author.id,
             position: null
         }
@@ -84,6 +82,25 @@ module.exports.join = {
         // Reply
         await bot.fetchChannel(game, 'announcements')
                 .send(`Welcome ${msg.author}, operator of the ${color} tank, to the game!`)
+
+        const gameSize = Object.keys(game.playerdata.alive).length
+        // Start the game if the game is full
+        const max = settings.get('creation.player_maximum', game)
+        if (max && max >= gameSize) {
+            await bot.fetchChannel(game, 'announcements')
+                .send("The game is now full.")
+            
+            // Check if the player minimum is above the maximum
+            if (gameSize < settings.get('creation.player_minimum', game)) {
+                await bot.fetchChannel(game, 'announcements')
+                    .send("So some fool decided to set the game's player max "
+                        + "below the player minimum. I'm starting the game "
+                        + "anyway.")
+            }
+
+            module.exports.start.beforeStart(null, game)
+        }
+
         return 'Welcome to the game!'
     },
     afterStart: async function(msg, game) {
@@ -101,13 +118,19 @@ module.exports.start = {
     playersOnly: false,
     afterStart: null,
     beforeStart: async function(msg, game) {
+
+        // Player count
+        const playerCount = Object.keys(game.playerdata.alive).length
+
+        // Check if the game is large enough
+        if (playerCount < settings.get('creation.player_minimum', game)) {
+            return "The game is not yet large enough to start."
+        }
+
         // Get the dimensions of the board
 
         // Each player will have a NxN area to themselves where they will spawn
         // Below figures out how many of these areas we will need
-
-        // Player count
-        const playerCount = Object.keys(game.playerdata.alive).length
 
         const x = Math.ceil(Math.sqrt(playerCount))
         const unscaledDims = {
@@ -142,8 +165,8 @@ module.exports.start = {
                 const yOffset = Math.floor(Math.random() * N)
 
                 player.position = [xBase + xOffset, yBase + yOffset]
-                player.health = 3
-                player.actions = 0
+                player.health = settings.get('creation.initial_health', game)
+                player.actions = settings.get('creation.initial_actions', game)
             }
             ++i
         }

@@ -87,6 +87,20 @@
                     "description": "The game will automatically start when this threshold is reached. Set this setting to null if no player maximum is desired.",
                     "default": null,
                     "allow_null": true
+                },
+                "initial_health": {
+                    "type": "integer",
+                    "bounds": [1, null],
+                    "description": "The health value players have at the beginning of the game.",
+                    "default": 3,
+                    "allow_null": false
+                },
+                "initial_actions": {
+                    "type": "integer",
+                    "bounds": [0, null],
+                    "description": "The number of action points that players have at the beginning of the game.",
+                    "default": 3,
+                    "allow_null": false
                 }
             }
         }
