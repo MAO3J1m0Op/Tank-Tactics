@@ -16,8 +16,20 @@ const colors = {
 }
 
 module.exports = colors
+
+const colorCount = Object.keys(colors).length
+allColors = new Array(colorCount * colorCount)
+// Make the allColors array
+let i = 0
+for (const a in colors) {
+    for (const b in colors) {
+        allColors[i] = a + '/' + b
+        ++i
+    }
+}
+
 /** @type {string[]} */
-module.exports.allColors = Object.keys(colors)
+module.exports.allColors = allColors
 
 /**
  * Gets all the unused colors for this game.

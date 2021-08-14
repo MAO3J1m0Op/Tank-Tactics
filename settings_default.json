@@ -20,8 +20,8 @@
                 "cell_size": {
                     "type": "integer",
                     "bounds": [1, null],
-                    "description": "The length and width of the cells.",
-                    "default": 20,
+                    "description": "The length and width of the cells, in pixels. This value will be multiplied by 2 accommodate multi-colored tanks.",
+                    "default": 15,
                     "allow_null": false
                 },
                 "empty_cell_color": {

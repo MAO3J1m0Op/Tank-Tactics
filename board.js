@@ -14,6 +14,7 @@ function hexToInt(hex) {
     if (/^#([a-f\d]{6})$/i.exec(hex)) {
         return parseInt(hex.slice(1) + 'FF', 16)
     }
+    throw new Error(`Attempting to draw with an invalid hex code: ${hex}.`)
 }
 
 /**
@@ -33,13 +34,13 @@ module.exports.createBoard = async function(game) {
     }
 
     const dims = {
-        x: game.playerdata.boardSize[0] * cell_size
+        x: game.playerdata.boardSize[0] * cell_size*2
         + borderCount.x * border_width,
-        y: game.playerdata.boardSize[1] * cell_size
+        y: game.playerdata.boardSize[1] * cell_size*2
         + borderCount.y * border_width,
     }
 
-    const img = await new jimp(dims.x, dims.y, border_color)
+    const img = new jimp(dims.x, dims.y, border_color)
 
     var color
     for (let x = 0; x < game.playerdata.boardSize[0]; ++x) {
@@ -50,11 +51,11 @@ module.exports.createBoard = async function(game) {
             for (const player in game.playerdata.alive) {
                 const element = game.playerdata.alive[player]
                 if (element.position[0] == x && element.position[1] == y) {
-                    color = colors[element.color]
+                    color = element.color.split('/')
+                        .map(col => colors[col]).join('/')
                     break
                 }
             }
-            if (!color) color = empty_cell_color
 
             fillCellPrivate(img, game, [x, y], color)
         }
@@ -66,7 +67,9 @@ module.exports.createBoard = async function(game) {
  * Fills a cell on a game board with a color.
  * @param {Game} game the game whose map will be colored.
  * @param {Position} pos the position to color.
- * @param {string} color the color to use.
+ * @param {string} color the color of the tank. If two colors, the color
+ * should be separated by a /.
+ * 
  */
 module.exports.fillCell = async function(game, pos, color) {
     const img = await jimp.read(game.path + '/board.png')
@@ -79,19 +82,56 @@ module.exports.fillCell = async function(game, pos, color) {
  * @param {jimp} img the Jimp image object.
  * @param {Game} game the game whose map will be updated.
  * @param {Position} pos the position of the cell.
- * @param {string} color the color of the cell.
+ * @param {string} color the color of the tank. If two colors, the color
+ * should be separated by a /.
  */
 function fillCellPrivate(img, game, pos, color) {
     const cell_size = settings.get('board.cell_size', game)
     const border_width = settings.get('board.border_width', game)
-    const colorNum = hexToInt(color)
-    return img.scan(
-        pos[0] * (border_width + cell_size) + border_width,
-        pos[1] * (border_width + cell_size) + border_width,
-        cell_size, cell_size, 
-        function(x, y, offset)
-    {
-        this.bitmap.data.writeUInt32BE(colorNum, offset, true)
+    const colors = color.split('/')
+    const colorNumA = hexToInt(colors[0])
+    if (colors[1]) {
+        const colorNumB = hexToInt(colors[1])
+        // Top left
+        fillRect(img,
+            pos[0] * (border_width + cell_size*2) + border_width,
+            pos[1] * (border_width + cell_size*2) + border_width,
+            cell_size, cell_size, colorNumA)
+        // Top right
+        fillRect(img,
+            pos[0] * (border_width + cell_size*2) + border_width + cell_size,
+            pos[1] * (border_width + cell_size*2) + border_width,
+            cell_size, cell_size, colorNumB)
+        // Bottom left
+        fillRect(img,
+            pos[0] * (border_width + cell_size*2) + border_width,
+            pos[1] * (border_width + cell_size*2) + border_width + cell_size,
+            cell_size, cell_size, colorNumB)
+        // Bottom right
+        return fillRect(img,
+            pos[0] * (border_width + cell_size*2) + border_width + cell_size,
+            pos[1] * (border_width + cell_size*2) + border_width + cell_size,
+            cell_size, cell_size, colorNumA)
+    } else {
+        return fillRect(img,
+            pos[0] * (border_width + cell_size*2) + border_width,
+            pos[1] * (border_width + cell_size*2) + border_width,
+            cell_size*2, cell_size*2, colorNumA)
+    }
+}
+
+/**
+ * Draws a rectangle on an image.
+ * @param {jimp} img the Jimp image object.
+ * @param {number} x the X position of the rectangle.
+ * @param {number} y the Y position of the rectangle.
+ * @param {number} w the width of the rectangle.
+ * @param {number} h the height of the rectangle.
+ * @param {string} color the color to fill.
+ */
+function fillRect(img, x, y, w, h, color) {
+    return img.scan(x, y, w, h, function(x, y, offset) {
+        this.bitmap.data.writeUInt32BE(color, offset, true)
     })
 }
 
@@ -112,7 +152,8 @@ module.exports.emptyCell = function(game, pos) {
  * @param {Game} game the game where the tank is moved.
  * @param {Position} pos the original position of the tank.
  * @param {Position} dest the destination where the tank will be moved.
- * @param {string} color the color of the tank.
+ * @param {string} color the color of the tank. If two colors, the color
+ * should be separated by a /.
  */
 module.exports.moveTank = async function(game, pos, dest, color) {
     const img = await jimp.read(game.path + '/board.png')

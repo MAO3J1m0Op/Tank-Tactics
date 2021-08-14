@@ -30,7 +30,7 @@ const board = require('./board')
  * @type {Action} Joins the game.
  */
 module.exports.join = {
-    syntax: 'join as <color>',
+    syntax: 'join as <color | primary_color/secondary_color>',
     gmOnly: false,
     costsPoint: false,
     playersOnly: false,
@@ -44,25 +44,30 @@ module.exports.join = {
         if (game.playerdata.alive[msg.author.id])
             return "You've been welcomed...I guess you wanna hear it twice?"
 
+        let properColor
         // Choose the color
         if (color) {
 
+            // Turns one color into two identical colors
+            properColor = color.includes('/')
+                ? color : color + '/' + color
+
             // Ensures the selected color is valid
-            if (!colors.allColors.includes(color)) {
+            if (!colors.allColors.includes(properColor)) {
                 return "The color you've picked is not on file. Try another."
             }
 
             // Ensures the selected color is unused
-            if (!colors.unusedColors(game).includes(color)) {
+            if (!colors.unusedColors(game).includes(properColor)) {
                 return "The color you've chosen is already used."
             }
         } else {
 
             // Random unused color
-            color = colors.randomUnused(game)
+            properColor = colors.randomUnused(game)
 
             // No colors?
-            if (!color) {
+            if (!properColor) {
                 return "There's no more colors to give ya!"
             }
         }
@@ -73,7 +78,7 @@ module.exports.join = {
 
         // Sets up their player data entry
         game.playerdata.alive[msg.author.id] = { 
-            color: color,
+            color: properColor,
             id: msg.author.id,
             position: null
         }
@@ -81,7 +86,8 @@ module.exports.join = {
 
         // Reply
         await bot.fetchChannel(game, 'announcements')
-                .send(`Welcome ${msg.author}, operator of the ${color} tank, to the game!`)
+            .send(`Welcome ${msg.author}, operator of the `
+                + `${color ? color : properColor} tank, to the game!`)
 
         const gameSize = Object.keys(game.playerdata.alive).length
         // Start the game if the game is full
