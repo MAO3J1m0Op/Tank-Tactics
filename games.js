@@ -224,14 +224,51 @@ module.exports.loadGame = async function(guild, name) {
         name: name
     }
 
-    const settings = fs.readFile(game.path + '/settings.json').then(JSON.parse)
-        .then(json => game.settings = json)
+    // Validate setting values
+    /**
+     * Function used for recusrion purposes.
+     * @param {*} category
+     * @param {string[]} name
+     */
+    function validateCategory(category, name) {
+        const last = name.push(undefined) - 1
+        for (const key in category) {
+            const setting = category[key]
+            name[last] = key
+
+            // Is setting an object (subcategory)
+            if (typeof setting === 'object' 
+                && setting !== null 
+                && !Array.isArray(setting))
+            {
+                return validateCategory(setting, [...name])
+            }
+
+            // Validate the setting
+            try {
+                settings.verifyValue(settings.get(name, game), name)
+            } catch (err) {
+                if (!(err instanceof settings.SettingNotFoundError)) throw err
+                
+                // Swallow setting not found error
+                console.log('Ignoring value for nonexistent setting '
+                    + settings.properName(name) + '.')
+            }
+        }        
+    }
+
+    const settingsP = fs.readFile(game.path + '/settings.json').then(JSON.parse)
+        .then(json => {
+            game.settings = json
+            validateCategory(json, [])
+        })
+
     const playerdata = fs.readFile(game.path + '/playerdata.json').then(JSON.parse)
         .then(json => game.playerdata = json)
     const discord = fs.readFile(game.path + '/discord.json').then(JSON.parse)
         .then(json => game.discord = json)
 
-    await Promise.all([settings, playerdata, discord])
+    await Promise.all([settingsP, playerdata, discord])
     addGame(guild, name, game)
     return game
 }
