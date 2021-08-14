@@ -85,11 +85,26 @@ function addGame(guild, name, game) {
 } 
 
 /**
- * Destroys any persistent elements of the game object.
+ * Archives a game: moves it out of the active folder and unloads it from
+ * memory.
+ * @param {Game} game the game to archive.
+ */
+module.exports.archiveGame = async function(game) {
+    const newPath = './data/archive/' + game.guild.id + '/' + game.name
+    unloadGame(game)
+    await fs.mkdir(newPath, { recursive: true })
+    return fs.rename(game.path, newPath)
+}
+
+/**
+ * Destroys any persistent elements of the game object and removes the object
+ * from the array of loaded games.
  * @param {Game} game the game to unload.
  */
 function unloadGame(game) {
     game.dailyCallback.clear()
+    const guild = loadedGames[game.guild.id]
+    delete guild[game.name]
 }
 
 module.exports.unloadAll = function() {

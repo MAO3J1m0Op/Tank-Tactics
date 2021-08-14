@@ -191,6 +191,44 @@ module.exports.start = {
     }
 }
 
+/** 
+ * @type {Action} Starts the game.
+ */
+ module.exports.end = {
+    syntax: 'end',
+    gmOnly: true,
+    costsPoint: false,
+    playersOnly: false,
+    beforeStart: null,
+    afterStart: async function(msg, game) {
+        let m = 'The game has ended! '
+        if (Object.keys(game.playerdata.alive).length === 1) {
+
+            // Get the winner via for loop
+            let winner
+            for (const key in game.playerdata.alive) {
+                winner = key
+                break
+            }
+
+            m += `The winner is...${game.guild.members.cache.get(winner)}!`
+        } else {
+            m += 'There is no one winner, but here are all the players still alive:\n'
+            for(const key in game.playerdata.alive) {
+                m += `${game.guild.members.cache.get(key)}\n`
+            }
+        }
+        bot.fetchChannel(game, 'announcements').send(m)
+
+        console.log(`Archiving game ${game.name} in ${game.guild.name},`
+            + ' as it has concluded.')
+        delete game.playerdata.started
+        await games.write('playerdata', game)
+
+        games.archiveGame(game)
+    }
+}
+
 /**
  * @type {Action} Quits the game.
  */

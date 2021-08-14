@@ -65,6 +65,9 @@ module.exports = {
                 case 'actions':
                     action = actions.actions
                     break
+                case 'end':
+                    action = actions.end
+                    break
                 case 'start':
                     action = actions.start
                     break
