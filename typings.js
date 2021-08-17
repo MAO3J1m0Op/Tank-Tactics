@@ -1,24 +1,6 @@
 /** @typedef {import('discord.js').Guild} Guild */
 
 /**
- * @typedef {Object} Setting A setting for the game.
- * @property {string} type The type of object
- * @property {[number, number]} [bounds] the low and high bound of the
- * value of the setting.
- * @property {string} [description] the description for the setting.
- * @property {*} default the default value of the object.
- * @property {boolean} allow_null whether null is accepted as a valid value for
- * the setting.
- */
-
-/**
- * @typedef {Object} SettingCategory A group of related settings.
- * @property {string} description the description for the setting category.
- * @property {{ [name: string]: Setting }} settings the settings contained within
- * the category.
- */
-
-/**
  * @typedef {[x: number, y: number]} Position
  */
 

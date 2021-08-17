@@ -1,12 +1,30 @@
 const defaults = require('./settings_default.json')
 
 /**
+ * @typedef {Object} Setting A setting for the game.
+ * @property {string} type The type of object
+ * @property {[number, number]} [bounds] the low and high bound of the
+ * value of the setting.
+ * @property {string} [description] the description for the setting.
+ * @property {*} default the default value of the object.
+ * @property {boolean} allow_null whether null is accepted as a valid value for
+ * the setting.
+ */
+
+/**
+ * @typedef {Object} SettingCategory A group of related settings.
+ * @property {string} description the description for the setting category.
+ * @property {{ [name: string]: Setting }} settings the settings contained within
+ * the category.
+ */
+
+/**
  * Gets a setting object associated with the setting name. If the setting
  * name points to a category, the category will be returned. If the setting
  * name points to nothing, undefined will be returned. An empty array will
  * yield the entire settings hierarchy in object form.
  * @param {string[]} settingName the full name of the setting.
- * @returns {Setting}
+ * @returns {Setting | SettingCategory}
  */
 function getSetting(settingName) {
     if (!settingName) return defaults
