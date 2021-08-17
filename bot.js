@@ -84,7 +84,17 @@ module.exports.fetchChannel = function(game, channelName) {
  */
 module.exports.updateBoard = async function(game) {
     const board = module.exports.fetchChannel(game, 'board')
-    const msg = board.messages.cache.get(game.discord.boardMsgID)
+    let msg
+    if (game.discord.boardMsgID) {
+        try {
+            msg = await board.messages.fetch(game.discord.boardMsgID)
+        } catch (err) {
+            if (err.code === 10008) msg = undefined
+            else throw err
+        }
+    } else {
+        msg = undefined
+    }
     if (msg) await board.messages.delete(msg)
     const newMsg = await board.send('', { files: [game.path + '/board.png'] })
     game.discord.boardMsgID = newMsg.id
