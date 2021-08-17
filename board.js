@@ -57,6 +57,9 @@ module.exports.createBoard = async function(game) {
                 }
             }
 
+            // No tank at the position, fill with the empty cell color
+            if (!color) color = empty_cell_color
+
             fillCellPrivate(img, game, [x, y], color)
         }
     }
