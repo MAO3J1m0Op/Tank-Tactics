@@ -71,7 +71,7 @@
                     "type": "integer",
                     "bounds": [2, null],
                     "description": "The length and height of the square area designated for each player's initial position.",
-                    "default": 7,
+                    "default": 5,
                     "allow_null": false
                 },
                 "player_minimum": {
