@@ -148,9 +148,8 @@ module.exports.verifyValue = function(value, settingName) {
     
     // Get the setting
     const setting = getSetting(settingName)
-    if (!setting) throw new SettingNotFoundError(settingName)
     // Ensure the setting isn't a category
-    if (!setting.settings) 
+    if (!setting || setting.settings) throw new SettingNotFoundError(settingName)
 
     // Null check
     if (!value && !setting.allow_null) 

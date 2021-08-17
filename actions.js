@@ -480,7 +480,7 @@ async function setSettingAction(msg, game, settingName, value) {
         if (err instanceof settings.SettingNotFoundError) return err.message
         return "That value doesn't work for that setting.\n```" + err.message + '```'
     }
-    settings.set(game, settingName, value)
+    settings.set(game, settingName, parsed)
     await games.write('settings', game)
     return 'Successfully updated the value of ' + settings.properName(settingName)
 }
