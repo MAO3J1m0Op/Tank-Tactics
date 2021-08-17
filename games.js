@@ -6,6 +6,7 @@ const fs = require('fs').promises
 
 const bot = require('./bot')
 const channels = require('./channels')
+const actions = require('./actions')
 const settings = require('./settings')
 const DailyCallback = require('./dailycallback')
 
