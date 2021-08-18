@@ -41,6 +41,9 @@
  * the board (in case the board is resized).
  * @property {Position} boardSize the size of the board.
  * @property {{[userID: string]: Player }} alive the tanks on the board.
+ * @property {{[userID: string]: string }} votes the jury votes. The key is
+ * the ID of the juror that voted, and the value is the ID of the player for
+ * which the juror voted.
  * @property {string[]} jury the IDs of the jurors.
  * @property {boolean} started whether the game has started.
  */

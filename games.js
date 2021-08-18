@@ -8,6 +8,7 @@ const bot = require('./bot')
 const channels = require('./channels')
 const actions = require('./actions')
 const settings = require('./settings')
+const colors = require('./colors')
 const DailyCallback = require('./dailycallback')
 
 /** @type {{ [guildLookup: string]: { [nameLookup: string]: Game }}} */
@@ -173,6 +174,7 @@ module.exports.newGame = async function(guild, name) {
         settings: {},
         playerdata: {
             alive: {},
+            votes: {},
             started: false
         },
         discord: {}
@@ -223,6 +225,21 @@ module.exports.tankAt = function(game, pos) {
         const element = game.playerdata.alive[p];
         if (element.position[0] === pos[0] 
             && element.position[1] === pos[1]) return element
+    }
+}
+
+/**
+ * Searches for a player with a color, then returns the player.
+ * @param {Game} game the game which will be searched.
+ * @param {string} color the color to search for.
+ */
+module.exports.tankWithColor = function(game, color) {
+
+    color = colors.doubleColor(color)
+
+    for (const p in game.playerdata.alive) {
+        const element = game.playerdata.alive[p];
+        if (element.color === color) return element
     }
 }
 

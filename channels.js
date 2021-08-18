@@ -1,5 +1,6 @@
 const bot = require('./bot')
 const actions = require('./actions')
+const games = require('./games')
 
 /**
  * @callback ChannelCreator
@@ -157,7 +158,45 @@ module.exports = {
         }
     },
     jury: {
-        create: createFactory('jury')
+        create: createFactory('jury'),
+        commandCallback: async (msg, game) => {
+
+            if (!game.playerdata.started) return
+
+            // Ensure the message is tagged as a spoiler
+            if (!msg.content.startsWith('||') || !msg.content.endsWith('||'))
+                return
+
+            // Cut out the spoiler tag
+            /** @type {string} */
+            const content = msg.content.slice(2, -2)
+
+            // Is the content a vote?
+            if (!content.startsWith('vote ')) return
+
+            // Additional information attached to the reply.
+            let desc = ''
+
+            const target = content.slice(5)
+
+            // Get the tank with the color
+            const tank = games.tankWithColor(game, target)
+
+            if (tank) {
+                desc = game.playerdata.votes[msg.author.id]
+                    ? 'Your vote has been updated.'
+                    : 'Your vote has been cast.'
+                game.playerdata.votes[msg.author.id] = tank.id
+                await games.write('playerdata', game)
+            } else {
+                desc = "Your vote was not cast; no player has that color."
+            }
+
+            // Respond to the message
+            await msg.reply(desc + '\nYour message has been deleted to keep '
+                + 'your vote anonymous.')
+            return msg.delete()
+        }
     },
     board: {
         create: createFactory('board')

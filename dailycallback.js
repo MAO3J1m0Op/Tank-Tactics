@@ -1,4 +1,5 @@
 const bot = require('./bot')
+const settings = require('./settings')
 
 /**
  * The callback invoked daily.
@@ -91,11 +92,59 @@ class DailyCallback {
         console.log(`Daily callback called for ${this.game.name}`
             + `in ${this.game.guild.name}.`)
         if (!this.game.playerdata.started) return
+
+        const dailyActions = settings.get('creation.daily_actions', game)
+
         for (const player in this.game.playerdata.alive)
-            ++this.game.playerdata.alive[player].actions;
+            this.game.playerdata.alive[player].actions += dailyActions
 
         bot.fetchChannel(this.game, 'announcements')
-            .send("Action points have been given to everybody!")
+            .send(`Daily recap: ${dailyAction} action points have been given `
+                + "to everybody.")
+
+        // Jury votes
+        const votes = {}
+        /** @type {string[]} */
+        const votedIn = []
+
+        for (const juror in this.game.playerdata.votes) {
+            const vote = this.game.playerdata.votes[juror];
+
+            // Null means already voted in; we don't need to count this vote
+            if (votes[vote] === null) return
+
+            // Undefined means no votes yet; let's fix that
+            if (votes[vote] === undefined) votes[vote] = 0
+
+            // Count the vote
+            ++votes[vote]
+
+            // Vote in if the target passes the vote threshold
+            if (votes[vote] > settings.get('gameplay.jury_bonus_minimum', game)) {
+                votedIn.push(vote)
+
+                // Mark the user as already voted in
+                votes[vote] = null
+            }
+        }
+
+        // Delete tallies
+        this.game.playerdata.votes = {}
+
+        // Message the players
+        const playerP = Promise.all(
+                votedIn.map(id => this.game.guild.members.fetch(id)))
+            .then(arr => arr.map(val => `${val}`).join(', '))
+
+        const msgP = playerP.then(p => {
+            if (!p) return 'The jury has convened, but no players were '
+                + 'elected to receive additional action points.'
+            return 'The jury has convened. The following players will receive '
+                + 'an additional action point, as they received '
+                + settings.get('gameplay.jury_bonus_minimum', game)
+                + ' or more votes:\n' + p
+        })
+        return msgP.then(msg => bot.fetchChannel('announcements', game).send(msg))
     }
 }
 module.exports = DailyCallback
