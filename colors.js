@@ -51,6 +51,25 @@ module.exports.unusedColors = function(game) {
 }
 
 /**
+ * Ensures a color has a primary and secondary value, duplicating
+ * the primary value if there is no secondary value.
+ * @param {string} color
+ */
+module.exports.doubleColor = function(color) {
+    return color.includes('/') ? color : color + '/' + color
+}
+
+/**
+ * Maps a color to its hex code. Returns undefined if either color
+ * does not exist in the colors map.
+ * @param {string} color
+ */
+module.exports.mapToHex = function(color) {
+    return color.split('/')
+        .map(col => colors[col]).join('/')
+}
+
+/**
  * Selects a random color that has not yet been used by the game,
  * or undefined if there is no unused color.
  * @param {Game} game the game for which this color is selected.

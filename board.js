@@ -51,8 +51,7 @@ module.exports.createBoard = async function(game) {
             for (const player in game.playerdata.alive) {
                 const element = game.playerdata.alive[player]
                 if (element.position[0] == x && element.position[1] == y) {
-                    color = element.color.split('/')
-                        .map(col => colors[col]).join('/')
+                    color = colors.mapToHex(game.playerdata.alive[player].color)
                     break
                 }
             }

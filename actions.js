@@ -49,8 +49,7 @@ module.exports.join = {
         if (color) {
 
             // Turns one color into two identical colors
-            properColor = color.includes('/')
-                ? color : color + '/' + color
+            properColor = colors.doubleColor(color)
 
             // Ensures the selected color is valid
             if (!colors.allColors.includes(properColor)) {
@@ -416,7 +415,8 @@ module.exports.move = {
             return "You can't do that! There's a tank there."
         }
 
-        const boardp = board.moveTank(game, player.position, dest, colors[player.color])
+        const boardp = board.moveTank(game, player.position, dest, 
+            colors.mapToHex(player.color))
             .then(() => bot.updateBoard(game))
         --player.actions
         player.position = dest
