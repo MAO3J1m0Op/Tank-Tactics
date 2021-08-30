@@ -180,24 +180,27 @@ module.exports.newGame = async function(guild, name) {
         discord: {}
     }
 
-    // Create Discord channels
+    const channelNames = ['announcements', 'actions', 'jury', 'board']
+    const roleNames = ['player', 'juror']
+
+    // Get the channels and the roles
+    const channelObjs = channelNames.map(name => channels[name])
+    const roleObjs = roleNames.map(name => channels[name + 'Role'])
+
+    // Create the roles
+    const roles = await Promise.all(roleObjs.map(role => role.create(game)))
+    for (let i = 0; i < roleNames.length; ++i) {
+        game.discord[roleNames[i] + 'Role'] = roles[i].id
+    }
+
+    // Create the parent channel
     game.discord.parentID = (await channels.parent.create(game)).id
-    const roles = await Promise.all([
-        channels.playerRole.create(game),
-        channels.jurorRole.create(game)
-    ])
-    game.discord.playerRole = roles[0].id
-    game.discord.jurorRole = roles[1].id
-    const chnls = await Promise.all([
-        channels.announcements.create(game),
-        channels.actions.create(game),
-        channels.jury.create(game),
-        channels.board.create(game),
-    ])
-    game.discord.announcementsID = chnls[0].id
-    game.discord.actionsID = chnls[1].id
-    game.discord.juryID = chnls[2].id
-    game.discord.boardID = chnls[3].id
+
+    // Create the main channels
+    const chnls = await Promise.all(channelObjs.map(chnl => chnl.create(game)))
+    for (let i = 0; i < channelNames.length; ++i) {
+        game.discord[channelNames[i] + 'ID'] = chnls[i].id
+    }
 
     // File structure
     await fs.mkdir(game.path, { recursive: true })
