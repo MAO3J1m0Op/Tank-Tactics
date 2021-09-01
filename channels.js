@@ -55,6 +55,15 @@ module.exports = {
             let chnl = await g.guild.channels.create(g.name, {type: 'GUILD_CATEGORY'})
             g.discord.parentID = chnl.id
             return chnl
+        },
+        permissions: {
+            everyone: {
+                VIEW_CHANNEL: true,
+                READ_MESSAGE_HISTORY: true,
+                SEND_MESSAGES: false,
+                SEND_TTS_MESSAGES: false,
+                ATTACH_FILES: false
+            }
         }
     },
     announcements: {
@@ -62,6 +71,17 @@ module.exports = {
     },
     actions: {
         create: createFactory('actions'),
+        permissions: {
+            everyone: {
+                SEND_MESSAGES: true,
+            },
+            player: {
+                SEND_MESSAGES: true,
+            },
+            juror: {
+                SEND_MESSAGES: false
+            }
+        },
         commandCallback: async (msg, game) => {
 
             const cmd = msg.content.toLowerCase().split(' ')
@@ -172,6 +192,16 @@ module.exports = {
     },
     jury: {
         create: createFactory('jury'),
+        permissions: {
+            everyone: {
+                SEND_MESSAGES: true,
+                VIEW_CHANNEL: false,
+                READ_MESSAGE_HISTORY: false
+            },
+            juror: {
+                VIEW_CHANNEL: true
+            }
+        },
         commandCallback: async (msg, game) => {
 
             if (!game.playerdata.started) return

@@ -83,6 +83,12 @@ module.exports.join = {
         }
         await games.write('playerdata', game)
 
+        // Change @everyone's permissions
+        await bot.fetchChannel(game, 'actions').permissionOverwrites
+            .create(game.guild.roles.everyone, {
+                SEND_MESSAGES: null
+            })
+
         // Reply
         await bot.fetchChannel(game, 'announcements')
             .send(`Welcome ${msg.author}, operator of the `

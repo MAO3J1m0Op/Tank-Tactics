@@ -194,7 +194,8 @@ module.exports.newGame = async function(guild, name) {
     }
 
     // Create the parent channel
-    game.discord.parentID = (await channels.parent.create(game)).id
+    const parent = await channels.parent.create(game)
+    game.discord.parentID = parent.id
 
     // Create the main channels
     const chnls = await Promise.all(channelObjs.map(chnl => chnl.create(game)))
@@ -202,9 +203,37 @@ module.exports.newGame = async function(guild, name) {
         game.discord[channelNames[i] + 'ID'] = chnls[i].id
     }
 
+    function setPermissions(chnl, channelObj) {
+
+        // Ignore channels without a permissions object
+        if (!channelObj.permissions) return
+
+        // Everyone role
+        if (channelObj.permissions.everyone) {
+            chnl.permissionOverwrites.create(game.guild.roles.everyone,
+                channelObj.permissions.everyone)
+        }
+
+        // Other roles
+        for (let r = 0; r < roleNames.length; ++r) {
+            if (channelObj.permissions[roleNames[r]]) {
+                chnl.permissionOverwrites.create(roles[r],
+                    channelObj.permissions[roleNames[r]])
+            }
+        }
+    }
+
+    // Set permissions for the parent category
+    setPermissions(parent, channels.parent)
+
+    // Set permissions for the satellite channels
+    for (let i = 0; i < channelNames.length; ++i) {
+        setPermissions(chnls[i], channelObjs[i])
+    }
+
     // File structure
     await fs.mkdir(game.path, { recursive: true })
-    Promise.all([
+    await Promise.all([
         module.exports.write('settings', game, { assumeDirMade: true}),
         module.exports.write('playerdata', game, { assumeDirMade: true}),
         module.exports.write('discord', game, { assumeDirMade: true})
