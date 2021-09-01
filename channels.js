@@ -19,6 +19,19 @@ const games = require('./games')
  * @property {ChannelCreator} create creates the channel.
  * @property {ChannelCommand} commandCallback the callback to be called when
  * a message is received on the channel.
+ * @property {ChannelPermissions} permissions the permissions assigned to the
+ * two roles upon creation.
+ */
+
+/** 
+ * @typedef {Object} ChannelPermissions An object containing the permission
+ * overwrites for a channel.
+ * @property {discord.PermissionOverwriteOptions} everyone the permission
+ * overwrites for anyone without a role.
+ * @property {discord.PermissionOverwriteOptions} player the permission
+ * overwrites for the player role.
+ * @property {discord.PermissionOverwriteOptions} juror the permission
+ * overwrites for the juror role.
  */
 
 /**
@@ -28,7 +41,7 @@ const games = require('./games')
  */
 function createFactory(name) {
     return async g => {
-        let chnl = await g.guild.channels.create(name, {type: "text"})
+        let chnl = await g.guild.channels.create(name, {type: 'GUILD_TEXT'})
         chnl.setParent(g.guild.channels.cache.get(g.discord.parentID))
         g.discord[name + 'ID'] = chnl.id
         return chnl
@@ -39,7 +52,7 @@ function createFactory(name) {
 module.exports = {
     parent: {
         create: async g => {
-            let chnl = await g.guild.channels.create(g.name, {type: "category"})
+            let chnl = await g.guild.channels.create(g.name, {type: 'GUILD_CATEGORY'})
             g.discord.parentID = chnl.id
             return chnl
         }
@@ -204,10 +217,8 @@ module.exports = {
     playerRole: {
         create: async g => {
             let role = await g.guild.roles.create({ 
-                data: { 
-                    name: "Player - " + g.name,
-                    color: 'GREEN'
-                }
+                name: "Player - " + g.name,
+                color: 'GREEN'
             })
             g.discord.playerRole = role.id
             return role
@@ -216,10 +227,8 @@ module.exports = {
     jurorRole: {
         create: async g => {
             let role = await g.guild.roles.create({ 
-                data: { 
-                    name: "Juror - " + g.name,
-                    color: 'GOLD'
-                }
+                name: "Juror - " + g.name,
+                color: 'GOLD'
             })
             g.discord.playerRole = role.id
             return role

@@ -4,11 +4,13 @@ const games = require('./games')
 const channels = require('./channels')
 const auth = require('./auth.json')
 
-const bot = new discord.Client()
+const bot = new discord.Client({ intents: [
+    discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES
+]})
 bot.login(auth.token)
 
 // Command callbacks for messages
-bot.on('message', msg => {
+bot.on('messageCreate', msg => {
 
     // Ignore own messages
     if (msg.author === bot.user) return
@@ -96,7 +98,7 @@ module.exports.updateBoard = async function(game) {
         msg = undefined
     }
     if (msg) await board.messages.delete(msg)
-    const newMsg = await board.send('', { files: [game.path + '/board.png'] })
+    const newMsg = await board.send({ files: [game.path + '/board.png'] })
     game.discord.boardMsgID = newMsg.id
     await games.write('discord', game)
     return newMsg
