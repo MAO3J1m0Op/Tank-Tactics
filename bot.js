@@ -19,20 +19,6 @@ bot.on('messageCreate', msg => {
     // Ignore DMs
     if (!msg.guild) return
 
-    // Natural language processing :P
-    const prefix = "Start a new game named "
-    if (msg.content.startsWith(prefix)) {
-
-        let name = msg.content.slice(prefix.length)
-        
-        // Start the game.
-        console.log(`Starting game in guild ${msg.guild.name} (ID ${msg.guild.id}).`)
-
-        loadedGames = games.newGame(msg.guild, name)
-
-        return
-    }
-
     const guildGames = games.getGames(msg.guild)
     
     for (const name in guildGames) {
@@ -51,6 +37,24 @@ bot.on('messageCreate', msg => {
     }
 })
 
+bot.on('interactionCreate', interaction => {
+    if (!interaction.isCommand()) return
+
+    if (interaction.commandName === 'new_game') {
+
+        const name = interaction.options.getString('name')
+        // Start the game
+        console.log(`Starting game in guild ${interaction.guild}`
+            + `(ID ${interaction.guild.id}).`)
+
+        return games.newGame(interaction.guild, name)
+            .then(game => {
+                interaction.reply(`Started a new game ${name}! Go check it out in `
+                    + `${module.exports.fetchChannel(game, 'announcements')}!`)
+            })
+    }
+})
+
 /**
  * @param {Guild} guild the guild the bot has newly joined.
  */
@@ -66,7 +70,32 @@ bot.on('guildCreate', onAddedToGuild)
  * @readonly
  */
 module.exports.ready = new Promise((resolve, reject) => {
-    bot.on('ready', () => { resolve() })
+    bot.on('ready', async () => {
+        
+        if (bot.application) {
+
+            /** @type {discord.ApplicationCommandData[]} */
+            const cmdData = [
+                {
+                    name: 'new_game',
+                    description: 'Creates a new game of Tank Tactics.',
+                    options: [
+                        {
+                            name: 'name',
+                            type: 'STRING',
+                            description: 'The name of the game to create.',
+                            required: true
+                        }
+                    ]
+                }
+            ];
+
+            const commands = await bot.application.commands.set(cmdData)
+            console.log('Slash commands registered.')
+        }
+
+        resolve() 
+    })
 })
 module.exports.ready
     .then(() => console.log(`Logged in as ${bot.user.tag}.`))
