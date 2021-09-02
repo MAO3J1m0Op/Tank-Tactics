@@ -3,6 +3,7 @@ const discord = require('discord.js')
 const games = require('./games')
 const channels = require('./channels')
 const auth = require('./auth.json')
+const guild_data = require('./guild_data')
 
 const bot = new discord.Client({ intents: [
     discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES
@@ -49,6 +50,16 @@ bot.on('messageCreate', msg => {
         }
     }
 })
+
+/**
+ * @param {Guild} guild the guild the bot has newly joined.
+ */
+async function onAddedToGuild(guild) {
+    const role = await guild_data.makeGMRole(guild)
+    guild.systemChannel.send(guild_data.welcomeMessage(role))
+}
+
+bot.on('guildCreate', onAddedToGuild)
 
 /**
  * This promise resolves whenever the bot is ready.
@@ -150,5 +161,11 @@ process.stdin.addListener('data', data => {
         console.log('Reloading!')
         games.unloadAll()
         games.loadAllActive()
+    }
+    else if (data.startsWith('rejoin ')) {
+        const id = data.slice(7)
+        const guild = bot.guilds.cache.get(id)
+        onAddedToGuild(guild)
+            .then(() => console.log(`Rejoined guild ${guild.name}.`))
     }
 })

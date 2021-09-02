@@ -1,6 +1,7 @@
 const bot = require('./bot')
 const actions = require('./actions')
 const games = require('./games')
+const guild_data = require('./guild_data')
 
 /**
  * @callback ChannelCreator
@@ -162,7 +163,15 @@ module.exports = {
                 default: return
             }
 
-            // TODO: verify the GM role
+            // Verify the GM role
+            if (action.gmOnly) {
+                const gmRole = await guild_data.getGMRole(msg.guild)
+                if (!msg.guild.members.cache.get(msg.author.id).roles
+                    .cache.get(gmRole.id))
+                {
+                    return msg.reply("You can't do that! That's a GM-only command!")
+                }
+            }
 
             // Pick the action to execute
             let func
